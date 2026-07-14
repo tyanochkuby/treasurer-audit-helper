@@ -38,6 +38,17 @@ ScaffoldingReadMe.txt
 
 # dotenv environment variables file
 .env
+.env.*
+!.env.example
+local.settings.json
+
+# Frontend dependencies and build output
+node_modules/
+dist/
+coverage/
+
+# macOS
+.DS_Store
 
 # Others
 ~$*
