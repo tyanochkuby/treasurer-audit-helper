@@ -46,7 +46,7 @@ export function AuditFiltersPanel({ filters, unknownEntityTypes, onApply }: { fi
   const operationLabel = selectedOperation ? t(selectedOperation.key) : t('filters.all')
   const entityLabel = selectedEntity ? t(selectedEntity.key) : draft.entityType ? t('entities.unknownCode', { code: draft.entityType }) : t('filters.all')
 
-  return <form onSubmit={submit} className="rounded-xl border border-slate-200 bg-white shadow-sm">
+  return <form onSubmit={submit} className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
     <div className="flex items-center gap-2 border-b border-slate-100 px-5 py-3.5">
       <FilterIcon className="h-5 w-5 text-brand-blue" />
       <h2 className="font-bold text-brand-navy">{t('filters.title')}</h2>

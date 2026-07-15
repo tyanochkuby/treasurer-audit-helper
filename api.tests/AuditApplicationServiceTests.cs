@@ -30,7 +30,7 @@ public sealed class AuditApplicationServiceTests
     }
 
     [Fact]
-    public async Task Missing_old_and_new_values_produce_a_readable_fallback_row()
+    public async Task Event_without_a_meaningful_difference_is_preserved_with_no_change_rows()
     {
         var repository = CreateRepository();
         repository.AuditRows.Add(CreateRow(_contractId, 20, 3, 4, null, null));
@@ -38,10 +38,41 @@ public sealed class AuditApplicationServiceTests
 
         var history = await service.GetHistoryAsync(_contractId, AuditFilter.Empty, CancellationToken.None);
 
-        var change = Assert.Single(Assert.Single(history.Items).Changes);
+        Assert.Empty(Assert.Single(history.Items).Changes);
+    }
+
+    [Fact]
+    public void Mapper_keeps_only_values_that_are_meaningful_for_each_operation()
+    {
+        var mapper = new AuditMapper();
+        var added = mapper.Map(CreateRow(
+            _contractId,
+            30,
+            1,
+            3,
+            null,
+            "{\"AnnexId\":\"annex-1\",\"ConclusionDate\":null}"));
+        var deleted = mapper.Map(CreateRow(
+            _contractId,
+            31,
+            2,
+            3,
+            "{\"AnnexId\":\"annex-1\",\"ConclusionDate\":null}",
+            null));
+        var modified = mapper.Map(CreateRow(
+            _contractId,
+            32,
+            3,
+            3,
+            "{\"ContractGrossValue\":\"100\",\"Subject\":\"unchanged\",\"Comment\":null}",
+            "{\"ContractGrossValue\":\"120\",\"Subject\":\"unchanged\",\"Comment\":null}"));
+
+        Assert.Equal("AnnexId", Assert.Single(added.Changes).FieldName);
+        Assert.Equal("AnnexId", Assert.Single(deleted.Changes).FieldName);
+        var change = Assert.Single(modified.Changes);
         Assert.Equal("ContractGrossValue", change.FieldName);
-        Assert.Null(change.OldValue);
-        Assert.Null(change.NewValue);
+        Assert.Equal("100", change.OldValue);
+        Assert.Equal("120", change.NewValue);
     }
 
     [Fact]

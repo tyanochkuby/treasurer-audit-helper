@@ -49,19 +49,23 @@ export function AuditTable({ items, filtered }: { items: AuditEvent[]; filtered:
         <TableHeader className="bg-brand-navy text-xs font-bold uppercase tracking-wide text-slate-200">
           <TableRow className="border-0 hover:bg-brand-navy"><TableHead className="w-40 px-4 py-3.5 text-slate-200">{t('table.dateTime')}</TableHead><TableHead className="w-52 px-4 py-3.5 text-slate-200">{t('table.user')}</TableHead><TableHead className="w-36 px-4 py-3.5 text-slate-200">{t('table.operation')}</TableHead><TableHead className="w-48 px-4 py-3.5 text-slate-200">{t('table.entity')}</TableHead><TableHead className="w-52 px-4 py-3.5 text-slate-200">{t('table.field')}</TableHead><TableHead className="px-4 py-3.5 text-slate-200">{t('table.previousValue')}</TableHead><TableHead className="px-4 py-3.5 text-slate-200">{t('table.newValue')}</TableHead></TableRow>
         </TableHeader>
-        {items.map((item) => <TableBody key={item.id} className="border-b-2 border-slate-200 last:border-b-0">
-          {item.changes.map((change, index) => <TableRow key={`${item.id}-${change.fieldName ?? index}`} className="align-top odd:bg-white even:bg-slate-50/50 hover:bg-blue-50/40">
+        {items.map((item) => {
+          const changes = item.changes.length > 0 ? item.changes : [null]
+          return <TableBody key={item.id} className="border-b-2 border-slate-200 last:border-b-0">
+          {changes.map((change, index) => <TableRow key={`${item.id}-${change?.fieldName ?? index}`} className="align-top odd:bg-white even:bg-slate-50/50 hover:bg-blue-50/40">
             {index === 0 && <>
-              <TableCell rowSpan={item.changes.length} className="whitespace-normal border-r border-slate-100 px-4 py-4 font-semibold text-slate-700"><time dateTime={item.occurredAtUtc}>{dateFormatter.format(new Date(item.occurredAtUtc))}</time><span className="mt-1 block text-[11px] font-normal text-slate-400">{t('table.eventId', { id: item.id })}</span></TableCell>
-              <TableCell rowSpan={item.changes.length} className="whitespace-normal border-r border-slate-100 px-4 py-4"><span className="font-semibold text-slate-800">{item.actorDisplayName}</span><span title={item.actorId} className="mt-1 block truncate text-[11px] text-slate-400">{item.actorId}</span></TableCell>
-              <TableCell rowSpan={item.changes.length} className="whitespace-normal border-r border-slate-100 px-4 py-4"><Badge className={`rounded-full px-2.5 py-1 text-xs font-bold ring-1 ring-inset ${operationClass(item.operationType)}`}>{operationLabel(item.operationType, t)}</Badge></TableCell>
-              <TableCell rowSpan={item.changes.length} className="whitespace-normal border-r border-slate-100 px-4 py-4"><span className="font-semibold text-slate-800">{entityLabel(item.entityType, t)}</span>{item.entityId && <span title={item.entityId} className="mt-1 block truncate text-[11px] text-slate-400">{item.entityId}</span>}<span className="mt-2 block text-xs leading-5 text-slate-500">{item.description}</span></TableCell>
+              <TableCell rowSpan={changes.length} className="whitespace-normal border-r border-slate-100 px-4 py-4 font-semibold text-slate-700"><time dateTime={item.occurredAtUtc}>{dateFormatter.format(new Date(item.occurredAtUtc))}</time><span className="mt-1 block text-[11px] font-normal text-slate-400">{t('table.eventId', { id: item.id })}</span></TableCell>
+              <TableCell rowSpan={changes.length} className="whitespace-normal border-r border-slate-100 px-4 py-4"><span className="font-semibold text-slate-800">{item.actorDisplayName}</span><span title={item.actorId} className="mt-1 block truncate text-[11px] text-slate-400">{item.actorId}</span></TableCell>
+              <TableCell rowSpan={changes.length} className="whitespace-normal border-r border-slate-100 px-4 py-4"><Badge className={`rounded-full px-2.5 py-1 text-xs font-bold ring-1 ring-inset ${operationClass(item.operationType)}`}>{operationLabel(item.operationType, t)}</Badge></TableCell>
+              <TableCell rowSpan={changes.length} className="whitespace-normal border-r border-slate-100 px-4 py-4"><span className="font-semibold text-slate-800">{entityLabel(item.entityType, t)}</span>{item.entityId && <span title={item.entityId} className="mt-1 block truncate text-[11px] text-slate-400">{item.entityId}</span>}<span className="mt-2 block text-xs leading-5 text-slate-500">{item.description}</span></TableCell>
             </>}
-            <TableCell className="whitespace-normal border-r border-slate-100 px-4 py-4"><span className="font-semibold text-slate-800">{change.fieldDisplayName ?? '—'}</span>{change.fieldName && change.fieldName !== change.fieldDisplayName && <code className="mt-1 block break-all text-[11px] text-slate-400">{change.fieldName}</code>}</TableCell>
-            <TableCell className="whitespace-normal border-r border-slate-100 px-4 py-4 leading-6 text-slate-700"><ValueCell value={change.oldValue} /></TableCell>
-            <TableCell className="whitespace-normal px-4 py-4 leading-6 text-slate-700"><ValueCell value={change.newValue} /></TableCell>
+            {change ? <>
+              <TableCell className="whitespace-normal border-r border-slate-100 px-4 py-4"><span className="font-semibold text-slate-800">{change.fieldDisplayName ?? '—'}</span>{change.fieldName && change.fieldName !== change.fieldDisplayName && <code className="mt-1 block break-all text-[11px] text-slate-400">{change.fieldName}</code>}</TableCell>
+              <TableCell className="whitespace-normal border-r border-slate-100 px-4 py-4 leading-6 text-slate-700"><ValueCell value={change.oldValue} /></TableCell>
+              <TableCell className="whitespace-normal px-4 py-4 leading-6 text-slate-700"><ValueCell value={change.newValue} /></TableCell>
+            </> : <TableCell colSpan={3} className="whitespace-normal px-4 py-4 text-sm italic text-slate-500">{t('table.noRecordedDifference')}</TableCell>}
           </TableRow>)}
-        </TableBody>)}
+        </TableBody>})}
       </Table>
   </Card>
 }

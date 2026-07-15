@@ -29,21 +29,15 @@ public sealed class CsvExportService
 
         foreach (var item in history.Items)
         {
+            if (item.Changes.Count == 0)
+            {
+                lines.Add(EventRow(item, null));
+                continue;
+            }
+
             foreach (var change in item.Changes)
             {
-                lines.Add(Row(
-                    item.Id,
-                    item.OccurredAtUtc.ToString("O"),
-                    item.ActorDisplayName,
-                    item.ActorId.ToString(),
-                    OperationLabel(item.OperationType),
-                    EntityLabel(item.EntityType),
-                    item.EntityId?.ToString(),
-                    change.FieldDisplayName,
-                    change.FieldName,
-                    change.OldValue,
-                    change.NewValue,
-                    item.Description));
+                lines.Add(EventRow(item, change));
             }
         }
 
@@ -84,6 +78,20 @@ public sealed class CsvExportService
     }
 
     private static string Row(params string?[] cells) => string.Join(Delimiter, cells.Select(Cell));
+
+    private static string EventRow(AuditEventDto item, AuditChangeDto? change) => Row(
+        item.Id,
+        item.OccurredAtUtc.ToString("O"),
+        item.ActorDisplayName,
+        item.ActorId.ToString(),
+        OperationLabel(item.OperationType),
+        EntityLabel(item.EntityType),
+        item.EntityId?.ToString(),
+        change?.FieldDisplayName,
+        change?.FieldName,
+        change?.OldValue,
+        change?.NewValue,
+        item.Description);
 
     private static string DescribeFilters(AuditFilter filter)
     {

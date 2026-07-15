@@ -40,13 +40,15 @@ public sealed class AuditMapper
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
 
-        var changes = fields.Count > 0
+        var changes = (fields.Count > 0
             ? fields.Select(field => new AuditChangeDto(
                 field,
                 GetFieldDisplayName(field),
                 oldPayload.Values.GetValueOrDefault(field),
                 newPayload.Values.GetValueOrDefault(field))).ToList()
-            : [new AuditChangeDto(null, null, oldPayload.Fallback, newPayload.Fallback)];
+            : [new AuditChangeDto(null, null, oldPayload.Fallback, newPayload.Fallback)])
+            .Where(change => IsMeaningfulChange(row.Type, change))
+            .ToList();
 
         var operation = Enum.IsDefined(typeof(AuditOperationType), row.Type)
             ? ((AuditOperationType)row.Type).ToString()
@@ -81,6 +83,14 @@ public sealed class AuditMapper
         6 => nameof(KnownEntityType.PaymentScheduleEntity),
         7 => nameof(KnownEntityType.ContractFundingEntity),
         _ => $"Unknown ({code})"
+    };
+
+    private static bool IsMeaningfulChange(int operationType, AuditChangeDto change) => operationType switch
+    {
+        (int)AuditOperationType.Added => change.NewValue is not null,
+        (int)AuditOperationType.Deleted => change.OldValue is not null,
+        (int)AuditOperationType.Modified => !string.Equals(change.OldValue, change.NewValue, StringComparison.Ordinal),
+        _ => true
     };
 
     private static string CreateDescription(string operation, string entityType, IReadOnlyList<AuditChangeDto> changes)

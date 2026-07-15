@@ -109,5 +109,6 @@ export const pl = {
     previousValue: 'Poprzednia wartość',
     newValue: 'Nowa wartość',
     eventId: 'ID: {{id}}',
+    noRecordedDifference: 'Brak różnic w zapisanych wartościach',
   },
 } as const

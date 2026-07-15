@@ -60,4 +60,22 @@ public sealed class CsvExportServiceTests
 
         Assert.Contains("od=2026-07-01, do=2026-07-15", text);
     }
+
+    [Fact]
+    public void Csv_preserves_events_without_meaningful_field_differences()
+    {
+        var contract = new ContractDto(Guid.NewGuid(), Guid.NewGuid(), "Umowa");
+        var item = new AuditEventDto(
+            "42", contract.Id, new DateTime(2026, 7, 14, 8, 0, 0, DateTimeKind.Utc),
+            "anna@example.pl", Guid.NewGuid(), "Modified", 1, "ContractHeaderEntity", Guid.NewGuid(),
+            "Zmieniono ContractHeaderEntity", []);
+        var history = new AuditHistoryDto(contract.Id, DateTime.UtcNow, "42", [item]);
+
+        var export = new CsvExportService().Create(contract, history, AuditFilter.Empty);
+        var eventLine = Assert.Single(
+            Encoding.UTF8.GetString(export.Content).Split("\r\n"),
+            line => line.StartsWith("\"42\";", StringComparison.Ordinal));
+
+        Assert.Contains(";\"\";\"\";\"\";\"\";\"Zmieniono ContractHeaderEntity\"", eventLine);
+    }
 }
