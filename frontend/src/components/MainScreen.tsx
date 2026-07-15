@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { ApiError, api } from '../api'
+import { formatOrganizationId } from '../formatOrganizationId'
 import type { AuditFilters, Contract } from '../types'
 import { Brand } from './AccessScreen'
 import { AuditFiltersPanel } from './AuditFilters'
@@ -33,6 +34,7 @@ interface Props {
 }
 
 export function MainScreen({ contracts, onUnauthorized, onLogout }: Props) {
+  const mainRef = useRef<HTMLElement>(null)
   const [params, setParams] = useSearchParams()
   const [sidebarOpen, setSidebarOpen] = useState(!params.get('contractId'))
   const [exporting, setExporting] = useState(false)
@@ -67,6 +69,7 @@ export function MainScreen({ contracts, onUnauthorized, onLogout }: Props) {
     const next = new URLSearchParams(params)
     next.set('contractId', id)
     setParams(next)
+    mainRef.current?.scrollTo({ top: 0 })
   }
 
   function applyFilters(nextFilters: AuditFilters) {
@@ -111,7 +114,7 @@ export function MainScreen({ contracts, onUnauthorized, onLogout }: Props) {
     return [...codes].sort((left, right) => left - right)
   }, [history.data, filters.entityType])
 
-  return <div className="min-h-screen bg-canvas">
+  return <div className="h-dvh overflow-hidden bg-canvas">
     <header className="fixed inset-x-0 top-0 z-50 flex h-16 items-center justify-between bg-brand-navy px-4 text-white shadow-lg sm:px-6">
       <div className="flex items-center gap-3">
         <button onClick={() => setSidebarOpen(true)} className="grid h-10 w-10 place-items-center rounded-lg text-slate-200 hover:bg-white/10 lg:hidden" aria-label="Otwórz listę umów"><ContractIcon className="h-6 w-6" /></button>
@@ -120,15 +123,15 @@ export function MainScreen({ contracts, onUnauthorized, onLogout }: Props) {
       <button onClick={onLogout} className="flex h-10 items-center gap-2 rounded-lg px-3 text-sm font-bold text-slate-200 transition hover:bg-white/10 hover:text-white"><LogoutIcon className="h-5 w-5" /><span className="hidden sm:inline">Wyloguj</span></button>
     </header>
 
-    <div className="flex min-h-screen pt-16">
+    <div className="flex h-full min-h-0 pt-16">
       <ContractSidebar contracts={contracts} selectedId={selectedId} open={sidebarOpen} onClose={() => setSidebarOpen(false)} onSelect={selectContract} />
-      <main className="min-w-0 flex-1 p-4 sm:p-6 xl:p-8">
+      <main ref={mainRef} className="min-h-0 min-w-0 flex-1 overflow-y-auto p-4 sm:p-6 xl:p-8">
         {!selected ? <NoSelection onOpen={() => setSidebarOpen(true)} /> : <>
           <div className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
             <div className="min-w-0">
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-blue">Historia audytowa</p>
               <h1 className="mt-1 break-words text-2xl font-bold tracking-tight text-brand-navy sm:text-3xl">{selected.displayName}</h1>
-              <p className="mt-2 break-all text-xs text-slate-500">Organizacja: {selected.organizationId}</p>
+              <p className="mt-2 truncate whitespace-nowrap text-xs text-slate-500" title={`Organizacja: ${selected.organizationId}`}>Organizacja: {formatOrganizationId(selected.organizationId)}</p>
             </div>
             <div className="flex shrink-0 flex-wrap gap-2">
               <button onClick={() => setSidebarOpen(true)} className="h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50 lg:hidden">Zmień umowę</button>
@@ -158,7 +161,7 @@ export function MainScreen({ contracts, onUnauthorized, onLogout }: Props) {
 }
 
 function NoSelection({ onOpen }: { onOpen: () => void }) {
-  return <div className="grid min-h-[calc(100vh-7rem)] place-items-center">
+  return <div className="grid min-h-full place-items-center">
     <div className="max-w-lg text-center">
       <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-blue-100 text-brand-blue"><ContractIcon className="h-8 w-8" /></div>
       <h1 className="mt-6 text-3xl font-bold tracking-tight text-brand-navy">Wybierz umowę</h1>

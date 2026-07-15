@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { Contract } from '../types'
+import { formatOrganizationId } from '../formatOrganizationId'
 import { ContractIcon, SearchIcon } from './Icons'
 
 interface Props {
@@ -22,7 +23,7 @@ export function ContractSidebar({ contracts, selectedId, open, onClose, onSelect
   return <>
     {open && <button aria-label="Zamknij listę umów" onClick={onClose} className="fixed inset-0 z-30 bg-brand-navy/45 backdrop-blur-[1px] lg:hidden" />}
     <aside className={`fixed inset-y-0 left-0 z-40 flex w-[min(88vw,350px)] flex-col border-r border-slate-200 bg-white pt-16 shadow-2xl transition-transform duration-200 lg:static lg:z-auto lg:w-[330px] lg:translate-x-0 lg:pt-0 lg:shadow-none ${open ? 'translate-x-0' : '-translate-x-full'}`} aria-label="Lista umów">
-      <div className="border-b border-slate-200 px-5 py-5">
+      <div className="shrink-0 border-b border-slate-200 bg-white px-5 py-5">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-blue">Umowy</p>
@@ -46,7 +47,7 @@ export function ContractSidebar({ contracts, selectedId, open, onClose, onSelect
                   <ContractIcon className={`mt-0.5 h-5 w-5 shrink-0 ${selected ? 'text-brand-blue' : 'text-slate-400 group-hover:text-slate-600'}`} />
                   <span className="min-w-0">
                     <span className={`block text-sm font-semibold leading-5 ${selected ? 'text-brand-blue-dark' : 'text-slate-800'}`}>{contract.displayName}</span>
-                    <span className="mt-1 block break-all text-[11px] leading-4 text-slate-400">Organizacja: {contract.organizationId}</span>
+                    <span className="mt-1 block truncate whitespace-nowrap text-[11px] leading-4 text-slate-400" title={`Organizacja: ${contract.organizationId}`}>Organizacja: {formatOrganizationId(contract.organizationId)}</span>
                   </span>
                 </button>
               </li>
