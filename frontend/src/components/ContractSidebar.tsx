@@ -2,6 +2,10 @@ import { useMemo, useState } from 'react'
 import type { Contract } from '../types'
 import { formatOrganizationId } from '../formatOrganizationId'
 import { ContractIcon, SearchIcon } from './Icons'
+import { Badge } from './ui/badge'
+import { Button } from './ui/button'
+import { Input } from './ui/input'
+import { Label } from './ui/label'
 
 interface Props {
   contracts: Contract[]
@@ -29,13 +33,13 @@ export function ContractSidebar({ contracts, selectedId, open, onClose, onSelect
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-blue">Umowy</p>
             <h2 className="mt-1 text-lg font-bold text-brand-navy">Wybierz dokument</h2>
           </div>
-          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600">{contracts.length}</span>
+          <Badge variant="secondary" className="rounded-full px-2.5 py-1 font-bold text-slate-600">{contracts.length}</Badge>
         </div>
-        <label className="relative mt-4 block">
+        <Label className="relative mt-4 block">
           <span className="sr-only">Szukaj umowy</span>
           <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-          <input value={search} onChange={(event) => setSearch(event.target.value)} type="search" placeholder="Numer, temat, ID organizacji…" className="h-11 w-full rounded-lg border border-slate-300 bg-slate-50 pl-10 pr-3 text-sm text-brand-navy transition placeholder:text-slate-400 focus:border-brand-blue focus:bg-white focus:outline-none" />
-        </label>
+          <Input value={search} onChange={(event) => setSearch(event.target.value)} type="search" placeholder="Numer, temat, ID organizacji…" className="h-11 border-slate-300 bg-slate-50 pl-10 pr-3 text-brand-navy placeholder:text-slate-400 focus:bg-white" />
+        </Label>
       </div>
       <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto" aria-live="polite">
         {matching.length === 0 ? <div className="px-6 py-10 text-center text-sm text-slate-500">Brak umów pasujących do wyszukiwania.</div> :
@@ -43,13 +47,13 @@ export function ContractSidebar({ contracts, selectedId, open, onClose, onSelect
             {matching.map((contract) => {
               const selected = contract.id === selectedId
               return <li key={contract.id} className="min-w-0">
-                <button onClick={() => { onSelect(contract.id); onClose() }} aria-current={selected ? 'true' : undefined} className={`group flex w-full min-w-0 max-w-full gap-3 border-l-4 px-4 py-3.5 text-left transition ${selected ? 'border-brand-blue bg-blue-50/80' : 'border-transparent hover:bg-slate-50'}`}>
+                <Button variant="ghost" onClick={() => { onSelect(contract.id); onClose() }} aria-current={selected ? 'true' : undefined} className={`group h-auto w-full min-w-0 max-w-full justify-start gap-3 rounded-none border-l-4 px-4 py-3.5 text-left whitespace-normal ${selected ? 'border-brand-blue bg-blue-50/80 hover:bg-blue-50/80' : 'border-transparent hover:bg-slate-50'}`}>
                   <ContractIcon className={`mt-0.5 h-5 w-5 shrink-0 ${selected ? 'text-brand-blue' : 'text-slate-400 group-hover:text-slate-600'}`} />
                   <span className="min-w-0">
                     <span className={`block break-words [overflow-wrap:anywhere] text-sm font-semibold leading-5 ${selected ? 'text-brand-blue-dark' : 'text-slate-800'}`}>{contract.displayName}</span>
                     <span className="mt-1 block truncate whitespace-nowrap text-[11px] leading-4 text-slate-400" title={`Organizacja: ${contract.organizationId}`}>Organizacja: {formatOrganizationId(contract.organizationId)}</span>
                   </span>
-                </button>
+                </Button>
               </li>
             })}
           </ul>}

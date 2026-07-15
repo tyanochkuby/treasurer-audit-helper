@@ -6,7 +6,7 @@ The UI is Polish. Code, API DTOs, environment variables, and this technical docu
 
 ## What is included
 
-- React 19 + TypeScript + Tailwind CSS frontend inspired by iFirma's compact navy/blue/amber visual language.
+- React 19 + TypeScript + Tailwind CSS 4 frontend using the shadcn Nova preset, Base UI primitives, Inter Variable, and Hugeicons, while retaining the iFirma-inspired navy/blue/amber visual language.
 - .NET 9 isolated Azure Functions API using Dapper and `Microsoft.Data.SqlClient`.
 - One shared access code exchanged for a signed, 30-minute, `HttpOnly` session cookie.
 - Contract search by displayed number/subject, contract UUID, and `OrganizationId`.
@@ -36,6 +36,7 @@ Prerequisites:
 - .NET 9 SDK
 - Azure Functions Core Tools v4
 - Node.js 22 or newer
+- pnpm 10.24
 - access to the SQL Server referenced by `REKRUTACJA_DB`
 
 Copy `api/local.settings.json.example` to `api/local.settings.json` and replace every placeholder locally. `local.settings.json` is ignored by Git.
@@ -60,8 +61,8 @@ Run the frontend in another terminal:
 
 ```bash
 cd frontend
-npm ci
-npm run dev
+pnpm install --frozen-lockfile
+pnpm dev
 ```
 
 Vite serves the app at `http://127.0.0.1:5173` and proxies `/api` to port 7071.
@@ -72,10 +73,10 @@ Vite serves the app at `http://127.0.0.1:5173` and proxies `/api` to port 7071.
 dotnet test api.tests/AuditApi.Tests.csproj
 
 cd frontend
-npm ci
-npm test
-npm run lint
-npm run build
+pnpm install --frozen-lockfile
+pnpm test
+pnpm lint
+pnpm build
 ```
 
 `DatabaseSmokeTests` performs read-only queries only when `REKRUTACJA_DB` is present. Without that setting it exits successfully, so CI does not require database access.
