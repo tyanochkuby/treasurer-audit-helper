@@ -67,6 +67,10 @@ pnpm dev
 
 Vite serves the app at `http://127.0.0.1:5173` and proxies `/api` to port 7071.
 
+### Frontend localization
+
+User-facing text is managed with `i18next` and `react-i18next`. Polish is the default and fallback language; its type-safe resource is in `frontend/src/i18n/pl.ts`. Components should use `useTranslation()` instead of embedding display text, while non-React modules can import the configured instance from `frontend/src/i18n`. Date formatting follows the active i18next language and retains the `Europe/Warsaw` audit timezone.
+
 ## Validation
 
 ```bash

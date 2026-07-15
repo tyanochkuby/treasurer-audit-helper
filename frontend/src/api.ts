@@ -1,4 +1,5 @@
 import type { AuditFilters, AuditHistory, AuditVersion, Contract } from './types'
+import i18n from './i18n'
 
 export class ApiError extends Error {
   readonly status: number
@@ -16,7 +17,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     headers: { ...(init?.body ? { 'Content-Type': 'application/json' } : {}), ...init?.headers },
   })
   if (!response.ok) {
-    let message = 'Nie udało się wykonać operacji.'
+    let message: string = i18n.t('api.genericError')
     try {
       const payload = (await response.json()) as { message?: string }
       if (payload.message) message = payload.message
@@ -50,7 +51,7 @@ export const api = {
   export: async (contractId: string, filters: AuditFilters) => {
     const query = buildAuditQuery(filters)
     const response = await fetch(`/api/contracts/${encodeURIComponent(contractId)}/audit/export.csv${query ? `?${query}` : ''}`, { credentials: 'same-origin' })
-    if (!response.ok) throw new ApiError(response.status, 'Nie udało się wyeksportować pliku CSV.')
+    if (!response.ok) throw new ApiError(response.status, i18n.t('api.exportError'))
     const disposition = response.headers.get('Content-Disposition') ?? ''
     const fileName = disposition.match(/filename="?([^";]+)"?/i)?.[1] ?? 'historia-zmian.csv'
     return { blob: await response.blob(), fileName }
