@@ -35,6 +35,7 @@ describe('ContractSidebar', () => {
     const scrollRegion = container.querySelector('.overflow-y-auto')
 
     expect(scrollRegion).not.toBeNull()
+    expect(scrollRegion).toHaveClass('overflow-x-hidden', 'overflow-y-auto')
     expect(scrollRegion).not.toContainElement(search)
     expect(search.closest('.shrink-0')).not.toBeNull()
   })

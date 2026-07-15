@@ -37,16 +37,16 @@ export function ContractSidebar({ contracts, selectedId, open, onClose, onSelect
           <input value={search} onChange={(event) => setSearch(event.target.value)} type="search" placeholder="Numer, temat, ID organizacji…" className="h-11 w-full rounded-lg border border-slate-300 bg-slate-50 pl-10 pr-3 text-sm text-brand-navy transition placeholder:text-slate-400 focus:border-brand-blue focus:bg-white focus:outline-none" />
         </label>
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto" aria-live="polite">
+      <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto" aria-live="polite">
         {matching.length === 0 ? <div className="px-6 py-10 text-center text-sm text-slate-500">Brak umów pasujących do wyszukiwania.</div> :
-          <ul className="divide-y divide-slate-100 py-1">
+          <ul className="min-w-0 divide-y divide-slate-100 py-1">
             {matching.map((contract) => {
               const selected = contract.id === selectedId
-              return <li key={contract.id}>
-                <button onClick={() => { onSelect(contract.id); onClose() }} aria-current={selected ? 'true' : undefined} className={`group flex w-full gap-3 border-l-4 px-4 py-3.5 text-left transition ${selected ? 'border-brand-blue bg-blue-50/80' : 'border-transparent hover:bg-slate-50'}`}>
+              return <li key={contract.id} className="min-w-0">
+                <button onClick={() => { onSelect(contract.id); onClose() }} aria-current={selected ? 'true' : undefined} className={`group flex w-full min-w-0 max-w-full gap-3 border-l-4 px-4 py-3.5 text-left transition ${selected ? 'border-brand-blue bg-blue-50/80' : 'border-transparent hover:bg-slate-50'}`}>
                   <ContractIcon className={`mt-0.5 h-5 w-5 shrink-0 ${selected ? 'text-brand-blue' : 'text-slate-400 group-hover:text-slate-600'}`} />
                   <span className="min-w-0">
-                    <span className={`block text-sm font-semibold leading-5 ${selected ? 'text-brand-blue-dark' : 'text-slate-800'}`}>{contract.displayName}</span>
+                    <span className={`block break-words [overflow-wrap:anywhere] text-sm font-semibold leading-5 ${selected ? 'text-brand-blue-dark' : 'text-slate-800'}`}>{contract.displayName}</span>
                     <span className="mt-1 block truncate whitespace-nowrap text-[11px] leading-4 text-slate-400" title={`Organizacja: ${contract.organizationId}`}>Organizacja: {formatOrganizationId(contract.organizationId)}</span>
                   </span>
                 </button>

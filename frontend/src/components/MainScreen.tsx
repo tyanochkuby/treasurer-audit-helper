@@ -125,12 +125,12 @@ export function MainScreen({ contracts, onUnauthorized, onLogout }: Props) {
 
     <div className="flex h-full min-h-0 pt-16">
       <ContractSidebar contracts={contracts} selectedId={selectedId} open={sidebarOpen} onClose={() => setSidebarOpen(false)} onSelect={selectContract} />
-      <main ref={mainRef} className="min-h-0 min-w-0 flex-1 overflow-y-auto p-4 sm:p-6 xl:p-8">
-        {!selected ? <NoSelection onOpen={() => setSidebarOpen(true)} /> : <>
-          <div className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+      <main ref={mainRef} className="min-h-0 min-w-0 flex-1 overflow-y-auto">
+        {!selected ? <div className="h-full p-4 sm:p-6 xl:p-8"><NoSelection onOpen={() => setSidebarOpen(true)} /></div> : <>
+          <div className="sticky top-0 z-20 flex flex-col gap-4 border-b border-slate-200 bg-canvas/95 px-4 py-4 shadow-sm backdrop-blur sm:px-6 xl:flex-row xl:items-start xl:justify-between xl:px-8">
             <div className="min-w-0">
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-blue">Historia audytowa</p>
-              <h1 className="mt-1 break-words text-2xl font-bold tracking-tight text-brand-navy sm:text-3xl">{selected.displayName}</h1>
+              <h1 className="mt-1 break-words text-xl font-bold tracking-tight text-brand-navy sm:text-2xl">{selected.displayName}</h1>
               <p className="mt-2 truncate whitespace-nowrap text-xs text-slate-500" title={`Organizacja: ${selected.organizationId}`}>Organizacja: {formatOrganizationId(selected.organizationId)}</p>
             </div>
             <div className="flex shrink-0 flex-wrap gap-2">
@@ -140,20 +140,22 @@ export function MainScreen({ contracts, onUnauthorized, onLogout }: Props) {
             </div>
           </div>
 
-          {newDataAvailable && <div role="status" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
-            <span><strong>Dostępne są nowe dane dla tej umowy.</strong> Widok nie został zmieniony automatycznie.</span>
-            <button onClick={refresh} className="font-bold text-brand-blue hover:underline">Odśwież teraz</button>
-          </div>}
-          {exportError && <div role="alert" className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{exportError}</div>}
+          <div className="p-4 sm:p-6 xl:p-8">
+            {newDataAvailable && <div role="status" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+              <span><strong>Dostępne są nowe dane dla tej umowy.</strong> Widok nie został zmieniony automatycznie.</span>
+              <button onClick={refresh} className="font-bold text-brand-blue hover:underline">Odśwież teraz</button>
+            </div>}
+            {exportError && <div role="alert" className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{exportError}</div>}
 
-          <AuditFiltersPanel filters={filters} unknownEntityTypes={unknownEntityTypes} onApply={applyFilters} />
+            <AuditFiltersPanel filters={filters} unknownEntityTypes={unknownEntityTypes} onApply={applyFilters} />
 
-          <div className="mb-3 mt-6 flex flex-wrap items-center justify-between gap-2 text-sm text-slate-500">
-            <span>{history.data ? `${history.data.items.length} ${history.data.items.length === 1 ? 'zdarzenie' : 'zdarzeń'}` : 'Historia zmian'}</span>
-            {history.data && <span>Dane pobrano: <time dateTime={history.data.generatedAtUtc}>{loadedFormatter.format(new Date(history.data.generatedAtUtc))}</time></span>}
+            <div className="mb-3 mt-6 flex flex-wrap items-center justify-between gap-2 text-sm text-slate-500">
+              <span>{history.data ? `${history.data.items.length} ${history.data.items.length === 1 ? 'zdarzenie' : 'zdarzeń'}` : 'Historia zmian'}</span>
+              {history.data && <span>Dane pobrano: <time dateTime={history.data.generatedAtUtc}>{loadedFormatter.format(new Date(history.data.generatedAtUtc))}</time></span>}
+            </div>
+
+            {history.isPending ? <LoadingTable /> : history.isError ? <RequestError onRetry={() => history.refetch()} /> : <AuditTable items={history.data.items} filtered={hasFilters(filters)} />}
           </div>
-
-          {history.isPending ? <LoadingTable /> : history.isError ? <RequestError onRetry={() => history.refetch()} /> : <AuditTable items={history.data.items} filtered={hasFilters(filters)} />}
         </>}
       </main>
     </div>
