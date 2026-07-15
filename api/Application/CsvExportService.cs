@@ -8,6 +8,7 @@ public sealed class CsvExportService
 {
     private const char Delimiter = ';';
     private static readonly UTF8Encoding Utf8WithBom = new(encoderShouldEmitUTF8Identifier: true);
+    private static readonly TimeZoneInfo WarsawTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Warsaw");
 
     public CsvExport Create(ContractDto contract, AuditHistoryDto history, AuditFilter filter)
     {
@@ -89,8 +90,16 @@ public sealed class CsvExportService
         var filters = new List<string>();
         if (filter.OperationType is not null) filters.Add($"operacja={filter.OperationType}");
         if (filter.EntityType is not null) filters.Add($"encja={filter.EntityType}");
-        if (filter.FromUtc is not null) filters.Add($"od={filter.FromUtc:yyyy-MM-dd}");
-        if (filter.ToExclusiveUtc is not null) filters.Add($"do={filter.ToExclusiveUtc.Value.AddDays(-1):yyyy-MM-dd}");
+        if (filter.FromUtc is not null)
+        {
+            var fromWarsaw = TimeZoneInfo.ConvertTimeFromUtc(filter.FromUtc.Value, WarsawTimeZone);
+            filters.Add($"od={fromWarsaw:yyyy-MM-dd}");
+        }
+        if (filter.ToExclusiveUtc is not null)
+        {
+            var toExclusiveWarsaw = TimeZoneInfo.ConvertTimeFromUtc(filter.ToExclusiveUtc.Value, WarsawTimeZone);
+            filters.Add($"do={toExclusiveWarsaw.Date.AddDays(-1):yyyy-MM-dd}");
+        }
         if (!string.IsNullOrWhiteSpace(filter.Search)) filters.Add($"szukaj={filter.Search}");
         filters.Add(filter.SortDirection == AuditSortDirection.Ascending ? "kolejność=najstarsze" : "kolejność=najnowsze");
         return string.Join(", ", filters);

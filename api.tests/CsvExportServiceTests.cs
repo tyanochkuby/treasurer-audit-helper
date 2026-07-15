@@ -37,4 +37,27 @@ public sealed class CsvExportServiceTests
         Assert.Contains("\"nowa\n\"\"wartość\"\"\"", text);
         Assert.Contains("żaneta@example.pl", text);
     }
+
+    [Fact]
+    public void Csv_describes_date_filters_as_the_original_warsaw_calendar_dates()
+    {
+        var contract = new ContractDto(Guid.NewGuid(), Guid.NewGuid(), "Umowa");
+        var history = new AuditHistoryDto(
+            contract.Id,
+            new DateTime(2026, 7, 15, 10, 0, 0, DateTimeKind.Utc),
+            "0",
+            []);
+        var filter = new AuditFilter(
+            null,
+            null,
+            new DateTime(2026, 6, 30, 22, 0, 0, DateTimeKind.Utc),
+            new DateTime(2026, 7, 15, 22, 0, 0, DateTimeKind.Utc),
+            null,
+            AuditSortDirection.Descending);
+
+        var export = new CsvExportService().Create(contract, history, filter);
+        var text = Encoding.UTF8.GetString(export.Content);
+
+        Assert.Contains("od=2026-07-01, do=2026-07-15", text);
+    }
 }

@@ -5,7 +5,7 @@ import { FilterIcon, SearchIcon } from './Icons'
 
 const input = 'h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 shadow-sm transition focus:border-brand-blue focus:outline-none'
 
-export function AuditFiltersPanel({ filters, onApply }: { filters: AuditFilters; onApply: (filters: AuditFilters) => void }) {
+export function AuditFiltersPanel({ filters, unknownEntityTypes, onApply }: { filters: AuditFilters; unknownEntityTypes: number[]; onApply: (filters: AuditFilters) => void }) {
   const [draft, setDraft] = useState(filters)
   useEffect(() => setDraft(filters), [filters])
 
@@ -48,7 +48,7 @@ export function AuditFiltersPanel({ filters, onApply }: { filters: AuditFilters;
         <select value={draft.entityType} onChange={(event) => update('entityType', event.target.value)} className={input}>
           <option value="">Wszystkie</option>
           <option value="0">Nieznana (0)</option><option value="1">Umowa</option><option value="2">Aneks</option><option value="3">Zmiana aneksu</option><option value="4">Plik</option><option value="5">Faktura</option><option value="6">Harmonogram płatności</option><option value="7">Finansowanie umowy</option>
-          {Array.from({ length: 10 }, (_, index) => index + 8).map((code) => <option key={code} value={code}>Unknown ({code})</option>)}
+          {unknownEntityTypes.map((code) => <option key={code} value={code}>Unknown ({code})</option>)}
         </select>
       </label>
       <label><span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500">Od</span><input type="date" value={draft.from} onChange={(event) => update('from', event.target.value)} className={input} /></label>

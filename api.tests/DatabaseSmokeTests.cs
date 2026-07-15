@@ -1,5 +1,6 @@
 using AuditApi.Domain;
 using AuditApi.Infrastructure;
+using Dapper;
 
 namespace AuditApi.Tests;
 
@@ -20,6 +21,21 @@ public sealed class DatabaseSmokeTests
             "test-session-signing-key-with-at-least-32-characters",
             "false");
         var repository = new SqlAuditRepository(new SqlConnectionFactory(settings));
+        await using (var schemaConnection = new SqlConnectionFactory(settings).Create())
+        {
+            var idType = await schemaConnection.ExecuteScalarAsync<string>("""
+                SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = 'dbo' AND TABLE_NAME = 'AuditLog' AND COLUMN_NAME = 'Id'
+                """);
+            var organizationColumns = (await schemaConnection.QueryAsync<string>("""
+                SELECT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = 'dbo' AND COLUMN_NAME = 'OrganizationId'
+                  AND TABLE_NAME IN ('PaymentSchedule', 'ContractFunding', 'Note')
+                ORDER BY TABLE_NAME
+                """)).ToArray();
+            Assert.Equal("int", idType);
+            Assert.Empty(organizationColumns);
+        }
 
         var contracts = await repository.GetContractsAsync(CancellationToken.None);
         var contract = Assert.Single(contracts.Take(1));

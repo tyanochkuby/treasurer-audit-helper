@@ -28,6 +28,9 @@ public sealed class SqlAuditRepository(ISqlConnectionFactory connectionFactory) 
         RelatedEntityIds AS (
             SELECT Id FROM RelatedDocuments
             UNION SELECT Id FROM RelatedInvoices
+            -- These three tables do not expose OrganizationId. Their parent/document
+            -- relationship is scoped through RelatedDocuments/RelatedInvoices, and
+            -- ScopedAudit still requires the audit row's OrganizationId to match.
             UNION SELECT p.Id FROM dbo.PaymentSchedule p WHERE p.DocumentId IN (SELECT Id FROM RelatedDocuments)
             UNION SELECT f.Id FROM dbo.ContractFunding f WHERE f.ContractId IN (SELECT Id FROM RelatedDocuments)
             UNION SELECT o.Id FROM dbo.Obligations o INNER JOIN SelectedContract c ON o.OrganizationId = c.OrganizationId

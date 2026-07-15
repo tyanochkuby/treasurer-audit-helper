@@ -104,6 +104,12 @@ export function MainScreen({ contracts, onUnauthorized, onLogout }: Props) {
   }
 
   const newDataAvailable = Boolean(history.data && version.data && history.data.version !== version.data.version)
+  const unknownEntityTypes = useMemo(() => {
+    const codes = new Set(history.data?.items.map((item) => item.entityTypeCode).filter((code) => code > 7) ?? [])
+    const selectedCode = Number(filters.entityType)
+    if (Number.isInteger(selectedCode) && selectedCode > 7) codes.add(selectedCode)
+    return [...codes].sort((left, right) => left - right)
+  }, [history.data, filters.entityType])
 
   return <div className="min-h-screen bg-canvas">
     <header className="fixed inset-x-0 top-0 z-50 flex h-16 items-center justify-between bg-brand-navy px-4 text-white shadow-lg sm:px-6">
@@ -137,7 +143,7 @@ export function MainScreen({ contracts, onUnauthorized, onLogout }: Props) {
           </div>}
           {exportError && <div role="alert" className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{exportError}</div>}
 
-          <AuditFiltersPanel filters={filters} onApply={applyFilters} />
+          <AuditFiltersPanel filters={filters} unknownEntityTypes={unknownEntityTypes} onApply={applyFilters} />
 
           <div className="mb-3 mt-6 flex flex-wrap items-center justify-between gap-2 text-sm text-slate-500">
             <span>{history.data ? `${history.data.items.length} ${history.data.items.length === 1 ? 'zdarzenie' : 'zdarzeń'}` : 'Historia zmian'}</span>

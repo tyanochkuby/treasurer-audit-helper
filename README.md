@@ -129,6 +129,8 @@ Ambiguous shared entities are excluded. For example, a contractor may be referen
 
 The shared access code intentionally exposes contracts from all organizations. `OrganizationId` is therefore visible and searchable in the global contract selector, and it is also enforced when scoping audit rows.
 
+The verified source schema uses SQL `int` for `AuditLog.Id`. `PaymentSchedule`, `ContractFunding`, and `Note` do not expose an `OrganizationId` column, so they are scoped through their proven document/parent relationship; the final audit-row join still requires the selected contract's `OrganizationId`.
+
 ### Filtering, ordering, and volume
 
 - Default order is `CreatedDate DESC, Id DESC`; oldest-first uses both keys ascending.

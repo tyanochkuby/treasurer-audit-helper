@@ -33,12 +33,10 @@ public sealed class AuditApplicationService(
         var versionTask = repository.GetVersionAsync(contractId, contract.OrganizationId, cancellationToken);
         await Task.WhenAll(rowsTask, versionTask);
 
+        // The repository owns contract scoping and structured filters so they are
+        // applied before rows leave SQL Server. Free-text search operates on the
+        // mapped, human-readable event and therefore remains in the application.
         var events = rowsTask.Result
-            .Where(row => row.RootContractId == contractId && row.Type is 1 or 2 or 3)
-            .Where(row => filter.OperationType is null || row.Type == (int)filter.OperationType)
-            .Where(row => filter.EntityType is null || row.EntityType == filter.EntityType)
-            .Where(row => filter.FromUtc is null || row.CreatedDate >= filter.FromUtc)
-            .Where(row => filter.ToExclusiveUtc is null || row.CreatedDate < filter.ToExclusiveUtc)
             .Select(mapper.Map)
             .Where(item => MatchesSearch(item, filter.Search))
             .ToList();
