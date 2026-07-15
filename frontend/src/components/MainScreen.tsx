@@ -9,6 +9,10 @@ import { AuditFiltersPanel } from './AuditFilters'
 import { AuditTable } from './AuditTable'
 import { ContractSidebar } from './ContractSidebar'
 import { ContractIcon, DownloadIcon, LogoutIcon, RefreshIcon } from './Icons'
+import { Alert } from './ui/alert'
+import { Button } from './ui/button'
+import { Card } from './ui/card'
+import { Skeleton } from './ui/skeleton'
 
 const loadedFormatter = new Intl.DateTimeFormat('pl-PL', { dateStyle: 'medium', timeStyle: 'medium', timeZone: 'Europe/Warsaw' })
 
@@ -117,10 +121,10 @@ export function MainScreen({ contracts, onUnauthorized, onLogout }: Props) {
   return <div className="h-dvh overflow-hidden bg-canvas">
     <header className="fixed inset-x-0 top-0 z-50 flex h-16 items-center justify-between bg-brand-navy px-4 text-white shadow-lg sm:px-6">
       <div className="flex items-center gap-3">
-        <button onClick={() => setSidebarOpen(true)} className="grid h-10 w-10 place-items-center rounded-lg text-slate-200 hover:bg-white/10 lg:hidden" aria-label="Otwórz listę umów"><ContractIcon className="h-6 w-6" /></button>
+        <Button variant="ghost" size="icon-lg" onClick={() => setSidebarOpen(true)} className="h-10 w-10 text-slate-200 hover:bg-white/10 hover:text-white lg:hidden" aria-label="Otwórz listę umów"><ContractIcon className="h-6 w-6" /></Button>
         <Brand light />
       </div>
-      <button onClick={onLogout} className="flex h-10 items-center gap-2 rounded-lg px-3 text-sm font-bold text-slate-200 transition hover:bg-white/10 hover:text-white"><LogoutIcon className="h-5 w-5" /><span className="hidden sm:inline">Wyloguj</span></button>
+      <Button variant="ghost" onClick={onLogout} className="h-10 gap-2 px-3 font-bold text-slate-200 hover:bg-white/10 hover:text-white"><LogoutIcon className="h-5 w-5" /><span className="hidden sm:inline">Wyloguj</span></Button>
     </header>
 
     <div className="flex h-full min-h-0 pt-16">
@@ -134,18 +138,18 @@ export function MainScreen({ contracts, onUnauthorized, onLogout }: Props) {
               <p className="mt-2 truncate whitespace-nowrap text-xs text-slate-500" title={`Organizacja: ${selected.organizationId}`}>Organizacja: {formatOrganizationId(selected.organizationId)}</p>
             </div>
             <div className="flex shrink-0 flex-wrap gap-2">
-              <button onClick={() => setSidebarOpen(true)} className="h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50 lg:hidden">Zmień umowę</button>
-              <button onClick={refresh} disabled={history.isFetching} className="flex h-10 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-60"><RefreshIcon className={`h-5 w-5 ${history.isFetching ? 'animate-spin' : ''}`} />Odśwież</button>
-              <button onClick={exportCsv} disabled={exporting || history.isPending} className="flex h-10 items-center gap-2 rounded-lg bg-brand-amber px-4 text-sm font-bold text-brand-navy shadow-sm transition hover:brightness-95 disabled:opacity-60"><DownloadIcon className="h-5 w-5" />{exporting ? 'Eksportowanie…' : 'Eksportuj CSV'}</button>
+              <Button variant="outline" onClick={() => setSidebarOpen(true)} className="h-10 border-slate-300 bg-white px-3 font-bold text-slate-700 shadow-sm hover:bg-slate-50 lg:hidden">Zmień umowę</Button>
+              <Button variant="outline" onClick={refresh} disabled={history.isFetching} className="h-10 gap-2 border-slate-300 bg-white px-3 font-bold text-slate-700 shadow-sm hover:bg-slate-50"><RefreshIcon className={`h-5 w-5 ${history.isFetching ? 'animate-spin' : ''}`} />Odśwież</Button>
+              <Button onClick={exportCsv} disabled={exporting || history.isPending} className="h-10 gap-2 bg-brand-amber px-4 font-bold text-brand-navy shadow-sm hover:bg-brand-amber/90"><DownloadIcon className="h-5 w-5" />{exporting ? 'Eksportowanie…' : 'Eksportuj CSV'}</Button>
             </div>
           </div>
 
           <div className="p-4 sm:p-6 xl:p-8">
-            {newDataAvailable && <div role="status" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+            {newDataAvailable && <Alert role="status" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border-blue-200 bg-blue-50 px-4 py-3 text-blue-900">
               <span><strong>Dostępne są nowe dane dla tej umowy.</strong> Widok nie został zmieniony automatycznie.</span>
-              <button onClick={refresh} className="font-bold text-brand-blue hover:underline">Odśwież teraz</button>
-            </div>}
-            {exportError && <div role="alert" className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{exportError}</div>}
+              <Button variant="link" onClick={refresh} className="h-auto p-0 font-bold text-brand-blue">Odśwież teraz</Button>
+            </Alert>}
+            {exportError && <Alert variant="destructive" className="mb-4 border-red-200 bg-red-50 px-4 py-3 font-medium text-red-700">{exportError}</Alert>}
 
             <AuditFiltersPanel filters={filters} unknownEntityTypes={unknownEntityTypes} onApply={applyFilters} />
 
@@ -168,18 +172,18 @@ function NoSelection({ onOpen }: { onOpen: () => void }) {
       <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-blue-100 text-brand-blue"><ContractIcon className="h-8 w-8" /></div>
       <h1 className="mt-6 text-3xl font-bold tracking-tight text-brand-navy">Wybierz umowę</h1>
       <p className="mt-3 leading-7 text-slate-500">Znajdź dokument w panelu po lewej stronie, aby zobaczyć jego pełną historię zmian.</p>
-      <button onClick={onOpen} className="mt-6 rounded-lg bg-brand-blue px-5 py-3 font-bold text-white shadow-sm hover:bg-brand-blue-dark lg:hidden">Pokaż listę umów</button>
+      <Button onClick={onOpen} className="mt-6 h-auto bg-brand-blue px-5 py-3 font-bold text-white shadow-sm hover:bg-brand-blue-dark lg:hidden">Pokaż listę umów</Button>
     </div>
   </div>
 }
 
 function LoadingTable() {
-  return <div role="status" aria-label="Ładowanie historii" className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-    <div className="h-12 animate-pulse bg-brand-navy" />
-    {[1, 2, 3, 4].map((item) => <div key={item} className="grid grid-cols-5 gap-6 border-b border-slate-100 px-5 py-5"><span className="h-4 animate-pulse rounded bg-slate-200" /><span className="h-4 animate-pulse rounded bg-slate-200" /><span className="h-4 animate-pulse rounded bg-slate-200" /><span className="h-4 animate-pulse rounded bg-slate-200" /><span className="h-4 animate-pulse rounded bg-slate-200" /></div>)}
-  </div>
+  return <Card role="status" aria-label="Ładowanie historii" className="gap-0 overflow-hidden border border-slate-200 bg-white py-0 shadow-sm">
+    <Skeleton className="h-12 rounded-none bg-brand-navy" />
+    {[1, 2, 3, 4].map((item) => <div key={item} className="grid grid-cols-5 gap-6 border-b border-slate-100 px-5 py-5"><Skeleton className="h-4" /><Skeleton className="h-4" /><Skeleton className="h-4" /><Skeleton className="h-4" /><Skeleton className="h-4" /></div>)}
+  </Card>
 }
 
 function RequestError({ onRetry }: { onRetry: () => void }) {
-  return <div role="alert" className="rounded-xl border border-red-200 bg-white px-6 py-12 text-center shadow-sm"><h3 className="text-lg font-bold text-red-800">Nie udało się pobrać historii</h3><p className="mt-2 text-sm text-slate-500">Sprawdź połączenie i spróbuj ponownie.</p><button onClick={onRetry} className="mt-5 rounded-lg bg-brand-blue px-4 py-2 text-sm font-bold text-white">Spróbuj ponownie</button></div>
+  return <Card role="alert" className="gap-0 border border-red-200 bg-white px-6 py-12 text-center shadow-sm"><h3 className="text-lg font-bold text-red-800">Nie udało się pobrać historii</h3><p className="mt-2 text-sm text-slate-500">Sprawdź połączenie i spróbuj ponownie.</p><Button onClick={onRetry} className="mx-auto mt-5 bg-brand-blue px-4 font-bold text-white hover:bg-brand-blue-dark">Spróbuj ponownie</Button></Card>
 }

@@ -1,6 +1,10 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { ApiError, api } from '../api'
+import { Button } from './ui/button'
+import { Card, CardContent } from './ui/card'
+import { Input } from './ui/input'
+import { Label } from './ui/label'
 
 export function AccessScreen({ onSuccess }: { onSuccess: () => Promise<void> }) {
   const [code, setCode] = useState('')
@@ -37,17 +41,19 @@ export function AccessScreen({ onSuccess }: { onSuccess: () => Promise<void> }) 
     <section className="flex min-h-screen items-center justify-center px-5 py-10 sm:px-12">
       <div className="w-full max-w-md">
         <div className="mb-12 lg:hidden"><Brand /></div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-7 shadow-[0_18px_60px_rgba(11,31,58,0.09)] sm:p-10">
+        <Card className="block gap-0 rounded-2xl border border-slate-200 bg-white py-0 shadow-[0_18px_60px_rgba(11,31,58,0.09)]">
+          <CardContent className="p-7 sm:p-10">
           <p className="text-sm font-semibold text-brand-blue">Bezpieczny dostęp</p>
           <h2 className="mt-2 text-3xl font-bold tracking-tight text-brand-navy">Wprowadź kod dostępu</h2>
           <p className="mt-3 text-sm leading-6 text-slate-500">Kod otrzymasz od administratora systemu.</p>
           <form className="mt-8" onSubmit={submit}>
-            <label htmlFor="access-code" className="mb-2 block text-sm font-semibold text-slate-700">Kod dostępu</label>
-            <input id="access-code" type="password" autoComplete="current-password" required value={code} onChange={(event) => setCode(event.target.value)} className="h-12 w-full rounded-lg border border-slate-300 bg-white px-4 text-brand-navy shadow-sm transition focus:border-brand-blue focus:outline-none" aria-describedby={error ? 'access-error' : undefined} />
+            <Label htmlFor="access-code" className="mb-2 block text-sm font-semibold text-slate-700">Kod dostępu</Label>
+            <Input id="access-code" type="password" autoComplete="current-password" required value={code} onChange={(event) => setCode(event.target.value)} className="h-12 bg-white px-4 text-brand-navy shadow-sm" aria-describedby={error ? 'access-error' : undefined} />
             {error && <p id="access-error" role="alert" className="mt-3 rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p>}
-            <button type="submit" disabled={submitting || !code} className="mt-6 flex h-12 w-full items-center justify-center rounded-lg bg-brand-blue px-5 font-bold text-white shadow-sm transition hover:bg-brand-blue-dark disabled:cursor-not-allowed disabled:opacity-55">{submitting ? 'Sprawdzanie…' : 'Przejdź do historii'}</button>
+            <Button type="submit" disabled={submitting || !code} className="mt-6 h-12 w-full bg-brand-blue px-5 font-bold text-white shadow-sm hover:bg-brand-blue-dark">{submitting ? 'Sprawdzanie…' : 'Przejdź do historii'}</Button>
           </form>
-        </div>
+          </CardContent>
+        </Card>
         <p className="mt-6 text-center text-xs leading-5 text-slate-500">Kod dostępu nie jest zapisywany w przeglądarce.</p>
       </div>
     </section>
