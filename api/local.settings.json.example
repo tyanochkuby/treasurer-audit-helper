@@ -3,7 +3,7 @@
   "Values": {
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
-    "REKRUTACJA_DB": "REPLACE_WITH_SERVER_SIDE_CONNECTION_STRING",
+    "REKRUTACJA_DB": "REPLACE_WITH_SERVER_SIDE_CONNECTION_SETTING",
     "ACCESS_CODE": "replace-with-a-long-random-code",
     "SESSION_SIGNING_KEY": "replace-with-at-least-32-random-characters",
     "COOKIE_SECURE": "false"
