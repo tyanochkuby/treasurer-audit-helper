@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import type { AuditEvent } from '../types'
 import { AuditTable } from './AuditTable'
 
@@ -79,5 +79,49 @@ describe('AuditTable', () => {
 
     expect(await navigator.clipboard.readText()).toBe('AuditLog.Id: 987\nEntityId: entity-id\nUserId: actor-id')
     expect(screen.getByRole('button', { name: 'Skopiowano dane techniczne' })).toBeInTheDocument()
+  })
+
+  it('uses the numeric entity type when its name and code disagree', () => {
+    render(<AuditTable items={[{ ...item, entityTypeCode: 3, entityType: 'Unknown' }]} filtered={false} />)
+
+    expect(screen.getByText('Typ 3')).toBeInTheDocument()
+  })
+
+  it('announces clipboard failures', async () => {
+    const user = userEvent.setup()
+    vi.spyOn(navigator.clipboard, 'writeText').mockRejectedValueOnce(new Error('denied'))
+    render(<AuditTable items={[item]} filtered={false} />)
+
+    await user.click(screen.getByRole('button', { name: 'Kopiuj dane techniczne' }))
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Nie udało się skopiować danych technicznych')
+  })
+
+  it('omits a missing entity identifier from copied technical data', async () => {
+    const user = userEvent.setup()
+    render(<AuditTable items={[{ ...item, entityId: null }]} filtered={false} />)
+
+    await user.click(screen.getByRole('button', { name: 'Kopiuj dane techniczne' }))
+
+    expect(await navigator.clipboard.readText()).toBe('AuditLog.Id: 987\nUserId: actor-id')
+  })
+
+  it('restarts copy feedback after another click', async () => {
+    vi.useFakeTimers()
+    try {
+      vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue(undefined)
+      render(<AuditTable items={[item]} filtered={false} />)
+      const copy = screen.getByRole('button', { name: 'Kopiuj dane techniczne' })
+
+      await act(async () => { fireEvent.click(copy) })
+      act(() => vi.advanceTimersByTime(1_500))
+      await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Skopiowano dane techniczne' })) })
+      act(() => vi.advanceTimersByTime(1_500))
+
+      expect(screen.getByRole('status')).toHaveTextContent('Skopiowano dane techniczne')
+      expect(screen.getByRole('button', { name: 'Skopiowano dane techniczne' })).toBeInTheDocument()
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

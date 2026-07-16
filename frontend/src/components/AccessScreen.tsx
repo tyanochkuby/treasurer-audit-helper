@@ -28,7 +28,7 @@ export function AccessScreen({ onSuccess }: { onSuccess: () => Promise<void> }) 
     } finally { setSubmitting(false) }
   }
 
-  return <main className="min-h-screen bg-canvas lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(420px,0.75fr)]">
+  return <main className="h-dvh overflow-y-auto overscroll-contain bg-canvas lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(420px,0.75fr)]">
     <section className="relative hidden overflow-hidden bg-brand-navy px-16 py-14 text-white lg:flex lg:flex-col lg:justify-between">
       <div className="absolute -right-32 top-24 h-96 w-96 rounded-full border border-white/10" />
       <div className="absolute -right-16 top-40 h-64 w-64 rounded-full bg-brand-blue/20" />
@@ -40,7 +40,7 @@ export function AccessScreen({ onSuccess }: { onSuccess: () => Promise<void> }) 
       </div>
       <p className="text-sm text-slate-400">{t('access.auditAccess')}</p>
     </section>
-    <section className="flex min-h-screen items-center justify-center px-5 py-10 sm:px-12">
+    <section className="flex min-h-full items-center justify-center px-5 py-10 sm:px-12">
       <div className="w-full max-w-md">
         <div className="mb-12 lg:hidden"><Brand /></div>
         <Card className="block gap-0 rounded-2xl border border-slate-200 bg-white py-0 shadow-[0_18px_60px_rgba(11,31,58,0.09)]">

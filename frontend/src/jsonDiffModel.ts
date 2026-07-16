@@ -23,8 +23,6 @@ function childPath(path: string, key: string | number, array: boolean) {
 }
 
 function collectChanges(oldValue: JsonValue | undefined, newValue: JsonValue | undefined, path: string, changes: JsonChange[]) {
-  if (diff(oldValue, newValue) === undefined) return
-
   if (isObject(oldValue) && isObject(newValue)) {
     const keys = new Set([...Object.keys(oldValue), ...Object.keys(newValue)])
     for (const key of keys) collectChanges(oldValue[key], newValue[key], childPath(path, key, false), changes)
@@ -37,6 +35,7 @@ function collectChanges(oldValue: JsonValue | undefined, newValue: JsonValue | u
     return
   }
 
+  if (Object.is(oldValue, newValue)) return
   changes.push({ path: path || '$', oldValue, newValue })
 }
 

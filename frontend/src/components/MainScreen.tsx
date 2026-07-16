@@ -182,7 +182,7 @@ function LoadingHistory() {
       </div>
       <div className="grid border-t border-[#E5E9F0] md:grid-cols-[280px_minmax(0,1fr)]">
         <div className="border-b border-[#E5E9F0] px-6 py-4 md:border-r md:border-b-0"><Skeleton className="h-4 w-36" /></div>
-        <div className="flex flex-wrap items-center gap-3 px-6 py-4"><Skeleton className="h-6 w-28 rounded-[6px]" /><span className="text-[#B0B7C3]">→</span><Skeleton className="h-6 w-36 rounded-[6px]" /></div>
+        <div className="flex flex-wrap items-center gap-3 px-6 py-4"><Skeleton className="h-6 w-28 rounded-[6px]" /><span className="text-[#B0B7C3]" aria-hidden="true">→</span><Skeleton className="h-6 w-36 rounded-[6px]" /></div>
       </div>
     </div>)}
   </Card>

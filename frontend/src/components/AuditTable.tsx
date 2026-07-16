@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { createJsonDiff } from '../jsonDiffModel'
-import type { AuditEvent } from '../types'
+import type { AuditChange, AuditEvent } from '../types'
 import { CopyIcon } from './Icons'
 import { JsonDiff } from './JsonDiff'
 import { Badge } from './ui/badge'
@@ -20,7 +20,7 @@ function operationClass(operation: string) {
 }
 
 function entityLabel(entity: string, entityTypeCode: number, t: TFunction) {
-  const keys = ['Unknown', 'ContractHeaderEntity', 'AnnexHeaderEntity', 'AnnexChangeEntity', 'FileEntity', 'InvoiceEntity', 'PaymentScheduleEntity', 'ContractFundingEntity'] as const
+  const keys = ['ContractHeaderEntity', 'AnnexHeaderEntity', 'AnnexChangeEntity', 'FileEntity', 'InvoiceEntity', 'PaymentScheduleEntity', 'ContractFundingEntity'] as const
   const key = keys.find((candidate) => candidate === entity)
   if (entityTypeCode === 0 || entityTypeCode > 7) return t('entities.unknownCode', { code: entityTypeCode })
   return key ? t(`entities.${key}`) : t('entities.unknownCode', { code: entityTypeCode })
@@ -28,13 +28,35 @@ function entityLabel(entity: string, entityTypeCode: number, t: TFunction) {
 
 function EventHeader({ item, dateFormatter, timeFormatter }: { item: AuditEvent; dateFormatter: Intl.DateTimeFormat; timeFormatter: Intl.DateTimeFormat }) {
   const { t } = useTranslation()
-  const [copied, setCopied] = useState(false)
-  const technicalData = `AuditLog.Id: ${item.id}\nEntityId: ${item.entityId ?? '—'}\nUserId: ${item.actorId}`
+  const [copyState, setCopyState] = useState<{ result: 'idle' | 'copied' | 'error'; announcement: number }>({ result: 'idle', announcement: 0 })
+  const resetCopyState = useRef<number | null>(null)
+  const technicalData = [`AuditLog.Id: ${item.id}`, ...(item.entityId ? [`EntityId: ${item.entityId}`] : []), `UserId: ${item.actorId}`].join('\n')
+
+  useEffect(() => {
+    return () => {
+      if (resetCopyState.current !== null) window.clearTimeout(resetCopyState.current)
+    }
+  }, [])
+
+  function showCopyState(state: 'copied' | 'error') {
+    if (resetCopyState.current !== null) window.clearTimeout(resetCopyState.current)
+    setCopyState((current) => ({ result: state, announcement: current.announcement + 1 }))
+    resetCopyState.current = window.setTimeout(() => {
+      setCopyState((current) => ({ ...current, result: 'idle' }))
+      resetCopyState.current = null
+    }, 2_000)
+  }
 
   async function copyTechnicalData() {
-    await navigator.clipboard.writeText(technicalData)
-    setCopied(true)
+    try {
+      await navigator.clipboard.writeText(technicalData)
+      showCopyState('copied')
+    } catch {
+      showCopyState('error')
+    }
   }
+
+  const copyLabel = copyState.result === 'copied' ? t('table.technicalDataCopied') : t('table.copyTechnicalData')
 
   return <header className="bg-slate-50/90 px-4 py-3.5">
     <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
@@ -51,7 +73,8 @@ function EventHeader({ item, dateFormatter, timeFormatter }: { item: AuditEvent;
       <div className="ml-auto flex min-w-0 items-center gap-2">
         <span title={item.actorId} className="truncate text-[13px] font-normal text-[#8A93A3]">{item.actorDisplayName}</span>
         <span className="shrink-0 font-mono text-xs font-normal text-[#8A93A3]">#{item.id}</span>
-        <button type="button" onClick={copyTechnicalData} title={copied ? t('table.technicalDataCopied') : t('table.copyTechnicalData')} aria-label={copied ? t('table.technicalDataCopied') : t('table.copyTechnicalData')} className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-[#B0B7C3] transition hover:bg-slate-100 hover:text-slate-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"><CopyIcon className="h-4 w-4" /></button>
+        <button type="button" onClick={copyTechnicalData} title={copyLabel} aria-label={copyLabel} className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-[#B0B7C3] transition hover:bg-slate-100 hover:text-slate-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"><CopyIcon className="h-4 w-4" /></button>
+        <span role="status" className="sr-only">{copyState.result !== 'idle' && <span key={copyState.announcement}>{copyState.result === 'copied' ? t('table.technicalDataCopied') : t('table.technicalDataCopyFailed')}</span>}</span>
       </div>
     </div>
   </header>
@@ -76,6 +99,30 @@ function ValueCell({ value, variant }: { value: string | null; variant: ValueVar
   </details>
 }
 
+function ChangeRow({ item, change }: { item: AuditEvent; change: AuditChange }) {
+  const { t } = useTranslation()
+  const jsonDiff = useMemo(
+    () => item.operationType === 'Modified' ? createJsonDiff(change.oldValue, change.newValue) : null,
+    [item.operationType, change.oldValue, change.newValue],
+  )
+
+  return <div className="grid bg-white md:grid-cols-[280px_minmax(0,1fr)]">
+    <div className="border-b border-[#E5E9F0] px-6 py-4 md:border-r md:border-b-0">
+      <span className="font-semibold text-slate-800">{change.fieldDisplayName ?? '—'}</span>
+      {change.fieldName && change.fieldName !== change.fieldDisplayName && <code className="mt-1 block break-all text-[11px] text-slate-400">{change.fieldName}</code>}
+    </div>
+    {jsonDiff ? <div className="min-w-0 px-6 py-4 leading-6"><JsonDiff data={jsonDiff} /></div> : item.operationType === 'Added' ? <div className="min-w-0 px-6 py-4 leading-6">
+      <span className="sr-only">{t('table.newValue')}: </span><ValueCell value={change.newValue} variant="plain" />
+    </div> : item.operationType === 'Deleted' ? <div className="min-w-0 px-6 py-4 leading-6">
+      <span className="sr-only">{t('table.previousValue')}: </span><ValueCell value={change.oldValue} variant="plain" />
+    </div> : <div className="flex min-w-0 flex-wrap items-center gap-3 px-6 py-4 leading-6">
+      <div className="max-w-full"><span className="sr-only">{t('table.previousValue')}: </span><ValueCell value={change.oldValue} variant="old" /></div>
+      <span className="shrink-0 text-[15px] text-[#B0B7C3]" aria-hidden="true">→</span>
+      <div className="max-w-full"><span className="sr-only">{t('table.newValue')}: </span><ValueCell value={change.newValue} variant="new" /></div>
+    </div>}
+  </div>
+}
+
 export function AuditTable({ items, filtered }: { items: AuditEvent[]; filtered: boolean }) {
   const { t, i18n } = useTranslation()
   const dateFormatter = useMemo(() => new Intl.DateTimeFormat(i18n.resolvedLanguage ?? i18n.language, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Warsaw' }), [i18n.language, i18n.resolvedLanguage])
@@ -91,23 +138,7 @@ export function AuditTable({ items, filtered }: { items: AuditEvent[]; filtered:
       <EventHeader item={item} dateFormatter={dateFormatter} timeFormatter={timeFormatter} />
 
       {item.changes.length > 0 ? <div className="divide-y divide-[#E5E9F0] border-t border-[#E5E9F0]">
-        {item.changes.map((change, index) => {
-          const jsonDiff = item.operationType === 'Modified' ? createJsonDiff(change.oldValue, change.newValue) : null
-          return <div key={`${item.id}-${change.fieldName ?? index}`} className="grid bg-white md:grid-cols-[280px_minmax(0,1fr)]">
-          <div className="border-b border-[#E5E9F0] px-6 py-4 md:border-r md:border-b-0">
-            <span className="font-semibold text-slate-800">{change.fieldDisplayName ?? '—'}</span>
-            {change.fieldName && change.fieldName !== change.fieldDisplayName && <code className="mt-1 block break-all text-[11px] text-slate-400">{change.fieldName}</code>}
-          </div>
-          {jsonDiff ? <div className="min-w-0 px-6 py-4 leading-6"><JsonDiff data={jsonDiff} /></div> : item.operationType === 'Added' ? <div className="min-w-0 px-6 py-4 leading-6">
-            <span className="sr-only">{t('table.newValue')}: </span><ValueCell value={change.newValue} variant="plain" />
-          </div> : item.operationType === 'Deleted' ? <div className="min-w-0 px-6 py-4 leading-6">
-            <span className="sr-only">{t('table.previousValue')}: </span><ValueCell value={change.oldValue} variant="plain" />
-          </div> : <div className="flex min-w-0 flex-wrap items-center gap-3 px-6 py-4 leading-6">
-            <div className="max-w-full"><span className="sr-only">{t('table.previousValue')}: </span><ValueCell value={change.oldValue} variant="old" /></div>
-            <span className="shrink-0 text-[15px] text-[#B0B7C3]" aria-hidden="true">→</span>
-            <div className="max-w-full"><span className="sr-only">{t('table.newValue')}: </span><ValueCell value={change.newValue} variant="new" /></div>
-          </div>}
-        </div>})}
+        {item.changes.map((change, index) => <ChangeRow key={`${item.id}-${change.fieldName ?? index}`} item={item} change={change} />)}
       </div> : <p className="border-t border-slate-200 px-4 py-4 text-sm italic text-slate-500">{t('table.noRecordedDifference')}</p>}
     </article>)}
   </div>

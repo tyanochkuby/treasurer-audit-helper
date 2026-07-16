@@ -83,7 +83,6 @@ export const pl = {
     Modified: 'Zmieniono',
   },
   entities: {
-    Unknown: 'Typ 0',
     unknownZero: 'Typ 0',
     unknownCode: 'Typ {{code}}',
     ContractHeaderEntity: 'Umowa',
@@ -108,7 +107,6 @@ export const pl = {
     field: 'Pole',
     previousValue: 'Poprzednia wartość',
     newValue: 'Nowa wartość',
-    eventId: 'ID: {{id}}',
     fieldCount_one: '{{count}} pole',
     fieldCount_few: '{{count}} pola',
     fieldCount_many: '{{count}} pól',
@@ -121,6 +119,7 @@ export const pl = {
     hideJsonDiff: 'Ukryj różnice',
     copyTechnicalData: 'Kopiuj dane techniczne',
     technicalDataCopied: 'Skopiowano dane techniczne',
+    technicalDataCopyFailed: 'Nie udało się skopiować danych technicznych',
     noRecordedDifference: 'Brak różnic w zapisanych wartościach',
   },
 } as const

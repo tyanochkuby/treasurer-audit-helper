@@ -24,6 +24,6 @@ describe('Polish translations', () => {
 
   it('labels unsupported entity codes as technical types', () => {
     expect(i18n.t('entities.unknownCode', { code: 9 })).toBe('Typ 9')
-    expect(i18n.t('entities.Unknown')).toBe('Typ 0')
+    expect(i18n.t('entities.unknownZero')).toBe('Typ 0')
   })
 })
