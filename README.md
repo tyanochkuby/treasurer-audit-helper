@@ -29,7 +29,7 @@ SQL Server: DocumentHeader + related entities + AuditLog
 
 No database credentials or access codes are sent to the browser. The API is the only component that connects to SQL Server.
 
-## Local development
+## Local setup
 
 Prerequisites:
 
@@ -50,19 +50,16 @@ Required server settings:
 | `SESSION_SIGNING_KEY` | Separate random signing key, at least 32 characters. Never reuse the access code. |
 | `COOKIE_SECURE` | Defaults to `true`. Set to `false` only for local HTTP development. |
 
-Run the API:
+From the repository root, run the API:
 
 ```bash
-cd api
-func start --dotnet-isolated --port 7071
+cd api && func start --dotnet-isolated --port 7071
 ```
 
 Run the frontend in another terminal:
 
 ```bash
-cd frontend
-pnpm install --frozen-lockfile
-pnpm dev
+cd frontend && pnpm install --frozen-lockfile && pnpm dev
 ```
 
 Vite serves the app at `http://127.0.0.1:5173` and proxies `/api` to port 7071.
