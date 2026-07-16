@@ -109,6 +109,10 @@ export const pl = {
     previousValue: 'Poprzednia wartość',
     newValue: 'Nowa wartość',
     eventId: 'ID: {{id}}',
+    fieldCount_one: '{{count}} pole',
+    fieldCount_few: '{{count}} pola',
+    fieldCount_many: '{{count}} pól',
+    fieldCount_other: '{{count}} pola',
     noRecordedDifference: 'Brak różnic w zapisanych wartościach',
   },
 } as const

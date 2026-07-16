@@ -26,5 +26,7 @@ describe('MainScreen', () => {
 
     const heading = screen.getByRole('heading', { name: contract.displayName })
     expect(heading.closest('.sticky')).toHaveClass('top-0')
+    expect(screen.queryByRole('banner')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Wyloguj' })).toBeInTheDocument()
   })
 })

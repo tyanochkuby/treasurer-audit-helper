@@ -2,9 +2,9 @@ import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import type { AuditEvent } from '../types'
+import { ArrowRightIcon } from './Icons'
 import { Badge } from './ui/badge'
 import { Card } from './ui/card'
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from './ui/table'
 
 function operationLabel(operation: string, t: TFunction) {
   if (operation === 'Added' || operation === 'Deleted' || operation === 'Modified') return t(`operations.${operation}`)
@@ -43,29 +43,46 @@ export function AuditTable({ items, filtered }: { items: AuditEvent[]; filtered:
     <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">{filtered ? t('table.noFilteredResultsDescription') : t('table.noHistoryDescription')}</p>
   </Card>
 
-  return <Card className="gap-0 border border-slate-200 bg-white py-0 shadow-sm">
-      <Table className="min-w-[1180px] border-collapse text-left">
-        <TableCaption className="sr-only">{t('table.caption')}</TableCaption>
-        <TableHeader className="bg-brand-navy text-xs font-bold uppercase tracking-wide text-slate-200">
-          <TableRow className="border-0 hover:bg-brand-navy"><TableHead className="w-40 px-4 py-3.5 text-slate-200">{t('table.dateTime')}</TableHead><TableHead className="w-52 px-4 py-3.5 text-slate-200">{t('table.user')}</TableHead><TableHead className="w-36 px-4 py-3.5 text-slate-200">{t('table.operation')}</TableHead><TableHead className="w-48 px-4 py-3.5 text-slate-200">{t('table.entity')}</TableHead><TableHead className="w-52 px-4 py-3.5 text-slate-200">{t('table.field')}</TableHead><TableHead className="px-4 py-3.5 text-slate-200">{t('table.previousValue')}</TableHead><TableHead className="px-4 py-3.5 text-slate-200">{t('table.newValue')}</TableHead></TableRow>
-        </TableHeader>
-        {items.map((item) => {
-          const changes = item.changes.length > 0 ? item.changes : [null]
-          return <TableBody key={item.id} className="border-b-2 border-slate-200 last:border-b-0">
-          {changes.map((change, index) => <TableRow key={`${item.id}-${change?.fieldName ?? index}`} className="align-top odd:bg-white even:bg-slate-50/50 hover:bg-blue-50/40">
-            {index === 0 && <>
-              <TableCell rowSpan={changes.length} className="whitespace-normal border-r border-slate-100 px-4 py-4 font-semibold text-slate-700"><time dateTime={item.occurredAtUtc}>{dateFormatter.format(new Date(item.occurredAtUtc))}</time><span className="mt-1 block text-[11px] font-normal text-slate-400">{t('table.eventId', { id: item.id })}</span></TableCell>
-              <TableCell rowSpan={changes.length} className="whitespace-normal border-r border-slate-100 px-4 py-4"><span className="font-semibold text-slate-800">{item.actorDisplayName}</span><span title={item.actorId} className="mt-1 block truncate text-[11px] text-slate-400">{item.actorId}</span></TableCell>
-              <TableCell rowSpan={changes.length} className="whitespace-normal border-r border-slate-100 px-4 py-4"><Badge className={`rounded-full px-2.5 py-1 text-xs font-bold ring-1 ring-inset ${operationClass(item.operationType)}`}>{operationLabel(item.operationType, t)}</Badge></TableCell>
-              <TableCell rowSpan={changes.length} className="whitespace-normal border-r border-slate-100 px-4 py-4"><span className="font-semibold text-slate-800">{entityLabel(item.entityType, t)}</span>{item.entityId && <span title={item.entityId} className="mt-1 block truncate text-[11px] text-slate-400">{item.entityId}</span>}<span className="mt-2 block text-xs leading-5 text-slate-500">{item.description}</span></TableCell>
-            </>}
-            {change ? <>
-              <TableCell className="whitespace-normal border-r border-slate-100 px-4 py-4"><span className="font-semibold text-slate-800">{change.fieldDisplayName ?? '—'}</span>{change.fieldName && change.fieldName !== change.fieldDisplayName && <code className="mt-1 block break-all text-[11px] text-slate-400">{change.fieldName}</code>}</TableCell>
-              <TableCell className="whitespace-normal border-r border-slate-100 px-4 py-4 leading-6 text-slate-700"><ValueCell value={change.oldValue} /></TableCell>
-              <TableCell className="whitespace-normal px-4 py-4 leading-6 text-slate-700"><ValueCell value={change.newValue} /></TableCell>
-            </> : <TableCell colSpan={3} className="whitespace-normal px-4 py-4 text-sm italic text-slate-500">{t('table.noRecordedDifference')}</TableCell>}
-          </TableRow>)}
-        </TableBody>})}
-      </Table>
-  </Card>
+  return <div role="list" aria-label={t('table.caption')} className="space-y-3">
+    {items.map((item) => <article key={item.id} role="listitem" className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <header className="bg-slate-50/90 px-4 py-3.5">
+        <div className="flex flex-wrap items-start gap-x-5 gap-y-3">
+          <div className="shrink-0">
+            <time dateTime={item.occurredAtUtc} className="block font-semibold text-slate-800">{dateFormatter.format(new Date(item.occurredAtUtc))}</time>
+            <span className="mt-1 block font-mono text-[11px] text-slate-400">{t('table.eventId', { id: item.id })}</span>
+          </div>
+          <Badge className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ring-1 ring-inset ${operationClass(item.operationType)}`}>{operationLabel(item.operationType, t)}</Badge>
+          <div className="min-w-48 flex-1">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="font-semibold text-slate-800">{entityLabel(item.entityType, t)}</span>
+              <span className="text-xs text-slate-500">{t('table.fieldCount', { count: item.changes.length })}</span>
+            </div>
+            {item.entityId && <code title={item.entityId} className="mt-1 block max-w-xl truncate text-[11px] text-slate-400">{item.entityId}</code>}
+          </div>
+          <div className="min-w-40 max-w-64 sm:text-right">
+            <span className="block font-semibold text-slate-800">{item.actorDisplayName}</span>
+            <code title={item.actorId} className="mt-1 block truncate text-[11px] text-slate-400">{item.actorId}</code>
+          </div>
+        </div>
+      </header>
+
+      {item.changes.length > 0 ? <div className="divide-y divide-slate-200 border-t border-slate-200">
+        {item.changes.map((change, index) => <div key={`${item.id}-${change.fieldName ?? index}`} className="grid bg-white hover:bg-blue-50/40 md:grid-cols-[minmax(10rem,28%)_minmax(0,1fr)]">
+          <div className="border-b border-slate-100 px-4 py-3.5 md:border-r md:border-b-0">
+            <span className="font-semibold text-slate-800">{change.fieldDisplayName ?? '—'}</span>
+            {change.fieldName && change.fieldName !== change.fieldDisplayName && <code className="mt-1 block break-all text-[11px] text-slate-400">{change.fieldName}</code>}
+          </div>
+          {item.operationType === 'Added' ? <div className="min-w-0 px-4 py-3.5 leading-6 text-slate-700">
+            <span className="sr-only">{t('table.newValue')}: </span><ValueCell value={change.newValue} />
+          </div> : item.operationType === 'Deleted' ? <div className="min-w-0 px-4 py-3.5 leading-6 text-slate-700">
+            <span className="sr-only">{t('table.previousValue')}: </span><ValueCell value={change.oldValue} />
+          </div> : <div className="flex min-w-0 flex-wrap items-center gap-3 px-4 py-3.5 leading-6 text-slate-700">
+            <div className="min-w-48 flex-1"><span className="sr-only">{t('table.previousValue')}: </span><ValueCell value={change.oldValue} /></div>
+            <ArrowRightIcon className="h-4 w-4 shrink-0 text-slate-400" />
+            <div className="min-w-48 flex-1"><span className="sr-only">{t('table.newValue')}: </span><ValueCell value={change.newValue} /></div>
+          </div>}
+        </div>)}
+      </div> : <p className="border-t border-slate-200 px-4 py-4 text-sm italic text-slate-500">{t('table.noRecordedDifference')}</p>}
+    </article>)}
+  </div>
 }

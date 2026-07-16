@@ -11,10 +11,16 @@ const item: AuditEvent = {
 describe('AuditTable', () => {
   it('renders grouped old and new values', () => {
     render(<AuditTable items={[item]} filtered={false} />)
-    expect(screen.getByRole('table')).toBeInTheDocument()
+    expect(screen.getByRole('list', { name: 'Historia zmian wybranej umowy' })).toBeInTheDocument()
+    expect(screen.getByRole('listitem')).toBeInTheDocument()
+    expect(screen.queryByRole('table')).not.toBeInTheDocument()
     expect(screen.getByText('120000')).toBeInTheDocument()
     expect(screen.getByText('135000')).toBeInTheDocument()
+    expect(screen.getByText('Poprzednia wartość:')).toHaveClass('sr-only')
+    expect(screen.getByText('Nowa wartość:')).toHaveClass('sr-only')
     expect(screen.getByText('Wartość brutto umowy')).toBeInTheDocument()
+    expect(screen.getByText('1 pole')).toBeInTheDocument()
+    expect(screen.queryByText('Zmieniono wartość')).not.toBeInTheDocument()
   })
 
   it('distinguishes empty history from filtered no-results', () => {
@@ -29,5 +35,13 @@ describe('AuditTable', () => {
 
     expect(screen.getByText('Brak różnic w zapisanych wartościach')).toBeInTheDocument()
     expect(screen.getByText('ID: 987')).toBeInTheDocument()
+  })
+
+  it('shows only the new value for added fields', () => {
+    const { container } = render(<AuditTable items={[{ ...item, operationType: 'Added', changes: [{ ...item.changes[0], oldValue: null }] }]} filtered={false} />)
+
+    expect(screen.getByText('Nowa wartość:')).toHaveClass('sr-only')
+    expect(screen.queryByText('Poprzednia wartość:')).not.toBeInTheDocument()
+    expect(container.querySelector('svg')).not.toBeInTheDocument()
   })
 })

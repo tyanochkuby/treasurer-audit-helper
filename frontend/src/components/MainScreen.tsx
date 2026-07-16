@@ -5,11 +5,10 @@ import { useTranslation } from 'react-i18next'
 import { ApiError, api } from '../api'
 import { formatOrganizationId } from '../formatOrganizationId'
 import type { AuditFilters, Contract } from '../types'
-import { Brand } from './AccessScreen'
 import { AuditFiltersPanel } from './AuditFilters'
 import { AuditTable } from './AuditTable'
 import { ContractSidebar } from './ContractSidebar'
-import { ContractIcon, DownloadIcon, LogoutIcon, RefreshIcon } from './Icons'
+import { ContractIcon, DownloadIcon, RefreshIcon } from './Icons'
 import { Alert } from './ui/alert'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
@@ -120,16 +119,8 @@ export function MainScreen({ contracts, onUnauthorized, onLogout }: Props) {
   }, [history.data, filters.entityType])
 
   return <div className="h-dvh overflow-hidden bg-canvas">
-    <header className="fixed inset-x-0 top-0 z-50 flex h-16 items-center justify-between bg-brand-navy px-4 text-white shadow-lg sm:px-6">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon-lg" onClick={() => setSidebarOpen(true)} className="h-10 w-10 text-slate-200 hover:bg-white/10 hover:text-white lg:hidden" aria-label={t('main.openContracts')}><ContractIcon className="h-6 w-6" /></Button>
-        <Brand light />
-      </div>
-      <Button variant="ghost" onClick={onLogout} className="h-10 gap-2 px-3 font-bold text-slate-200 hover:bg-white/10 hover:text-white"><LogoutIcon className="h-5 w-5" /><span className="hidden sm:inline">{t('main.logout')}</span></Button>
-    </header>
-
-    <div className="flex h-full min-h-0 pt-16">
-      <ContractSidebar contracts={contracts} selectedId={selectedId} open={sidebarOpen} onClose={() => setSidebarOpen(false)} onSelect={selectContract} />
+    <div className="flex h-full min-h-0">
+      <ContractSidebar contracts={contracts} selectedId={selectedId} open={sidebarOpen} onClose={() => setSidebarOpen(false)} onSelect={selectContract} onLogout={onLogout} />
       <main ref={mainRef} className="min-h-0 min-w-0 flex-1 overflow-y-auto">
         {!selected ? <div className="h-full p-4 sm:p-6 xl:p-8"><NoSelection onOpen={() => setSidebarOpen(true)} /></div> : <>
           <div className="sticky top-0 z-20 flex flex-col gap-4 border-b border-slate-200 bg-canvas/95 px-4 py-4 shadow-sm backdrop-blur sm:px-6 xl:flex-row xl:items-start xl:justify-between xl:px-8">
@@ -181,9 +172,9 @@ function NoSelection({ onOpen }: { onOpen: () => void }) {
 
 function LoadingTable() {
   const { t } = useTranslation()
-  return <Card role="status" aria-label={t('main.loadingHistory')} className="gap-0 overflow-hidden border border-slate-200 bg-white py-0 shadow-sm">
-    <Skeleton className="h-12 rounded-none bg-brand-navy" />
-    {[1, 2, 3, 4].map((item) => <div key={item} className="grid grid-cols-5 gap-6 border-b border-slate-100 px-5 py-5"><Skeleton className="h-4" /><Skeleton className="h-4" /><Skeleton className="h-4" /><Skeleton className="h-4" /><Skeleton className="h-4" /></div>)}
+  return <Card role="status" aria-label={t('main.loadingHistory')} className="gap-3 border-0 bg-transparent p-0 shadow-none">
+    <Skeleton className="h-12 rounded-xl bg-brand-navy" />
+    {[1, 2, 3].map((item) => <div key={item} className="overflow-hidden rounded-xl border border-slate-200 bg-white"><div className="flex gap-6 bg-slate-50 px-5 py-4"><Skeleton className="h-4 w-36" /><Skeleton className="h-4 w-24" /><Skeleton className="h-4 flex-1" /></div><div className="grid grid-cols-3 gap-6 border-t border-slate-200 px-5 py-5"><Skeleton className="h-4" /><Skeleton className="h-4" /><Skeleton className="h-4" /></div></div>)}
   </Card>
 }
 

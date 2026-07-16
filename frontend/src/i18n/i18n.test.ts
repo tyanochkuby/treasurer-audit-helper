@@ -8,4 +8,11 @@ describe('Polish translations', () => {
     expect(i18n.t('main.eventCount', { count: 5 })).toBe('5 zdarzeń')
     expect(i18n.t('main.eventCount', { count: 22 })).toBe('22 zdarzenia')
   })
+
+  it('uses Polish plural forms for changed-field counts', () => {
+    expect(i18n.t('table.fieldCount', { count: 0 })).toBe('0 pól')
+    expect(i18n.t('table.fieldCount', { count: 1 })).toBe('1 pole')
+    expect(i18n.t('table.fieldCount', { count: 2 })).toBe('2 pola')
+    expect(i18n.t('table.fieldCount', { count: 5 })).toBe('5 pól')
+  })
 })
