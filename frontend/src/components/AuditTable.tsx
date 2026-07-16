@@ -65,19 +65,19 @@ function EventHeader({ item, contract, dateFormatter, timeFormatter }: { item: A
   const copyLabel = copyState.result === 'copied' ? t('table.technicalDataCopied') : t('table.copyTechnicalData')
 
   return <header className="bg-slate-50/90 px-4 py-3.5">
-    <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+    <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-2 sm:flex sm:flex-wrap sm:gap-x-6 sm:gap-y-3">
       <time dateTime={item.occurredAtUtc} className="shrink-0 whitespace-nowrap">
         <span className="text-[15px] font-medium text-[#1F2937]">{dateFormatter.format(new Date(item.occurredAtUtc))}</span>{' '}
         <span className="text-[13px] font-normal text-[#8A93A3]">{timeFormatter.format(new Date(item.occurredAtUtc))}</span>
       </time>
-      <Badge className={`shrink-0 rounded-[10px] border px-2.5 py-0.5 text-xs font-medium ${operationClass(item.operationType)}`}>{operationLabel(item.operationType, t)}</Badge>
-      <div className="flex min-w-0 items-center gap-1.5">
+      <Badge className={`shrink-0 justify-self-end rounded-[10px] border px-2.5 py-0.5 text-xs font-medium sm:justify-self-auto ${operationClass(item.operationType)}`}>{operationLabel(item.operationType, t)}</Badge>
+      <div className="flex min-w-0 items-center gap-1.5 sm:shrink-0">
         <span className="font-semibold text-slate-800">{entityLabel(item.entityType, item.entityTypeCode, t)}</span>
-        <span className="text-slate-400" aria-hidden="true">·</span>
-        <span className="text-sm text-[#8A93A3]">{t('table.fieldCount', { count: item.changes.length })}</span>
+        <span className="hidden text-slate-400 sm:inline" aria-hidden="true">·</span>
+        <span className="hidden text-sm text-[#8A93A3] sm:inline">{t('table.fieldCount', { count: item.changes.length })}</span>
       </div>
-      <div className="ml-auto flex min-w-0 items-center gap-2">
-        <span title={item.actorId} className="truncate text-[13px] font-normal text-[#8A93A3]">{item.actorDisplayName}</span>
+      <div className="ml-auto flex w-full min-w-0 items-center justify-end gap-2 overflow-hidden sm:w-auto">
+        <span title={item.actorId} className="min-w-0 truncate text-[13px] font-normal text-[#8A93A3]">{item.actorDisplayName}</span>
         <span className="shrink-0 font-mono text-xs font-normal text-[#8A93A3]">#{item.id}</span>
         <button type="button" onClick={copyTechnicalData} title={copyLabel} aria-label={copyLabel} className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-[#B0B7C3] transition hover:bg-slate-100 hover:text-slate-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"><CopyIcon className="h-4 w-4" /></button>
         <span role="status" className="sr-only">{copyState.result !== 'idle' && <span key={copyState.announcement}>{copyState.result === 'copied' ? t('table.technicalDataCopied') : t('table.technicalDataCopyFailed')}</span>}</span>
