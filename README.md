@@ -133,6 +133,8 @@ The shared access code intentionally exposes contracts from all organizations. `
 
 The verified source schema uses SQL `int` for `AuditLog.Id`. `PaymentSchedule`, `ContractFunding`, and `Note` do not expose an `OrganizationId` column, so they are scoped through their proven document/parent relationship; the final audit-row join still requires the selected contract's `OrganizationId`.
 
+For each history request, the repository materializes the related document, invoice, and entity ID sets, followed by the scoped audit rows, into connection-scoped SQL temporary tables. The filtered event rows and the unfiltered highest scoped audit ID are then returned in one batch. This computes the relationship scope once while preserving a version that can detect new data even when the visible history is filtered. The standalone version endpoint uses the same materialized scope for lightweight polling.
+
 ### Filtering, ordering, and volume
 
 - Default order is `CreatedDate DESC, Id DESC`; oldest-first uses both keys ascending.

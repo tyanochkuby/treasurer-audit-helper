@@ -27,6 +27,8 @@ public sealed class AuditApplicationServiceTests
         Assert.Equal("ContractGrossValue", Assert.Single(item.Changes).FieldName);
         Assert.Equal("Wartość brutto umowy", item.Changes[0].FieldDisplayName);
         Assert.Equal("99", history.Version);
+        Assert.Equal(1, repository.SnapshotCallCount);
+        Assert.Equal(0, repository.VersionCallCount);
     }
 
     [Fact]

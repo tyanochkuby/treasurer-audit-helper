@@ -20,10 +20,12 @@ public sealed record AuditLogRecord(
     Guid? EntityId,
     Guid? ParentId);
 
+public sealed record AuditSnapshot(IReadOnlyList<AuditLogRecord> Rows, int Version);
+
 public interface IAuditRepository
 {
     Task<IReadOnlyList<ContractRecord>> GetContractsAsync(CancellationToken cancellationToken);
     Task<ContractRecord?> GetContractAsync(Guid contractId, CancellationToken cancellationToken);
-    Task<IReadOnlyList<AuditLogRecord>> GetAuditAsync(Guid contractId, Guid organizationId, AuditFilter filter, CancellationToken cancellationToken);
+    Task<AuditSnapshot> GetAuditSnapshotAsync(Guid contractId, Guid organizationId, AuditFilter filter, CancellationToken cancellationToken);
     Task<int> GetVersionAsync(Guid contractId, Guid organizationId, CancellationToken cancellationToken);
 }

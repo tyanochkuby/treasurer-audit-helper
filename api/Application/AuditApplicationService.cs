@@ -29,14 +29,16 @@ public sealed class AuditApplicationService(
         var contract = await repository.GetContractAsync(contractId, cancellationToken)
             ?? throw new ContractNotFoundException(contractId);
 
-        var rowsTask = repository.GetAuditAsync(contractId, contract.OrganizationId, filter, cancellationToken);
-        var versionTask = repository.GetVersionAsync(contractId, contract.OrganizationId, cancellationToken);
-        await Task.WhenAll(rowsTask, versionTask);
+        var snapshot = await repository.GetAuditSnapshotAsync(
+            contractId,
+            contract.OrganizationId,
+            filter,
+            cancellationToken);
 
         // The repository owns contract scoping and structured filters so they are
         // applied before rows leave SQL Server. Free-text search operates on the
         // mapped, human-readable event and therefore remains in the application.
-        var events = rowsTask.Result
+        var events = snapshot.Rows
             .Select(mapper.Map)
             .Where(item => MatchesSearch(item, filter.Search))
             .ToList();
@@ -44,7 +46,7 @@ public sealed class AuditApplicationService(
         return new AuditHistoryDto(
             contractId,
             timeProvider.GetUtcNow().UtcDateTime,
-            versionTask.Result.ToString(),
+            snapshot.Version.ToString(),
             events);
     }
 
