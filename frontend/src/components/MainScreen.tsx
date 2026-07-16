@@ -150,7 +150,7 @@ export function MainScreen({ contracts, onUnauthorized, onLogout }: Props) {
               {history.data && <span>{t('main.loadedAt')} <time dateTime={history.data.generatedAtUtc}>{loadedFormatter.format(new Date(history.data.generatedAtUtc))}</time></span>}
             </div>
 
-            {history.isPending ? <LoadingTable /> : history.isError ? <RequestError onRetry={() => history.refetch()} /> : <AuditTable items={history.data.items} filtered={hasFilters(filters)} />}
+            {history.isPending ? <LoadingHistory /> : history.isError ? <RequestError onRetry={() => history.refetch()} /> : <AuditTable items={history.data.items} filtered={hasFilters(filters)} />}
           </div>
         </>}
       </main>
@@ -170,11 +170,21 @@ function NoSelection({ onOpen }: { onOpen: () => void }) {
   </div>
 }
 
-function LoadingTable() {
+function LoadingHistory() {
   const { t } = useTranslation()
   return <Card role="status" aria-label={t('main.loadingHistory')} className="gap-3 border-0 bg-transparent p-0 shadow-none">
-    <Skeleton className="h-12 rounded-xl bg-brand-navy" />
-    {[1, 2, 3].map((item) => <div key={item} className="overflow-hidden rounded-xl border border-slate-200 bg-white"><div className="flex gap-6 bg-slate-50 px-5 py-4"><Skeleton className="h-4 w-36" /><Skeleton className="h-4 w-24" /><Skeleton className="h-4 flex-1" /></div><div className="grid grid-cols-3 gap-6 border-t border-slate-200 px-5 py-5"><Skeleton className="h-4" /><Skeleton className="h-4" /><Skeleton className="h-4" /></div></div>)}
+    {[1, 2, 3].map((item) => <div key={item} className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-3 bg-slate-50 px-4 py-3.5">
+        <div className="space-y-2"><Skeleton className="h-4 w-36" /><Skeleton className="h-3 w-16" /></div>
+        <Skeleton className="h-6 w-24 rounded-full" />
+        <div className="min-w-40 flex-1 space-y-2"><Skeleton className="h-4 w-32" /><Skeleton className="h-3 max-w-72" /></div>
+        <div className="space-y-2"><Skeleton className="ml-auto h-4 w-40" /><Skeleton className="ml-auto h-3 w-28" /></div>
+      </div>
+      <div className="grid border-t border-[#E5E9F0] md:grid-cols-[280px_minmax(0,1fr)]">
+        <div className="border-b border-[#E5E9F0] px-6 py-4 md:border-r md:border-b-0"><Skeleton className="h-4 w-36" /></div>
+        <div className="flex flex-wrap items-center gap-3 px-6 py-4"><Skeleton className="h-6 w-28 rounded-[6px]" /><span className="text-[#B0B7C3]">→</span><Skeleton className="h-6 w-36 rounded-[6px]" /></div>
+      </div>
+    </div>)}
   </Card>
 }
 
