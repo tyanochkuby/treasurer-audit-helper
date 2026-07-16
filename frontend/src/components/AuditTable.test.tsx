@@ -87,6 +87,32 @@ describe('AuditTable', () => {
     expect(screen.getByText('Typ 3')).toBeInTheDocument()
   })
 
+  it('uses frontend field translations with entity-specific labels and a raw fallback', () => {
+    render(<AuditTable items={[{
+      ...item,
+      entityTypeCode: 5,
+      entityType: 'InvoiceEntity',
+      changes: [
+        { fieldName: 'Number', fieldDisplayName: 'Number', oldValue: '1', newValue: '2' },
+        { fieldName: 'P4', fieldDisplayName: 'P4', oldValue: 'A', newValue: 'B' },
+      ],
+    }]} filtered={false} />)
+
+    expect(screen.getByText('Numer faktury')).toBeInTheDocument()
+    expect(screen.getByText('Number')).toBeInTheDocument()
+    expect(screen.getByText('P4')).toBeInTheDocument()
+  })
+
+  it('keeps the API label as a compatibility fallback', () => {
+    render(<AuditTable items={[{
+      ...item,
+      changes: [{ fieldName: 'futureField', fieldDisplayName: 'Przyszłe pole', oldValue: '1', newValue: '2' }],
+    }]} filtered={false} />)
+
+    expect(screen.getByText('Przyszłe pole')).toBeInTheDocument()
+    expect(screen.getByText('futureField')).toBeInTheDocument()
+  })
+
   it('announces clipboard failures', async () => {
     const user = userEvent.setup()
     vi.spyOn(navigator.clipboard, 'writeText').mockRejectedValueOnce(new Error('denied'))

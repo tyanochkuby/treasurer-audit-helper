@@ -21,4 +21,10 @@
     <InternalsVisibleTo Include="AuditApi.Tests" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="..\frontend\src\i18n\pl\auditFieldLabels.json"
+                      Link="Localization\auditFieldLabels.pl.json"
+                      LogicalName="AuditApi.Localization.auditFieldLabels.pl.json" />
+  </ItemGroup>
+
 </Project>

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import i18n from '.'
+import auditFieldLabels from './pl/auditFieldLabels.json'
 
 describe('Polish translations', () => {
   it('uses Polish plural forms for audit event counts', () => {
@@ -25,5 +26,15 @@ describe('Polish translations', () => {
   it('labels unsupported entity codes as technical types', () => {
     expect(i18n.t('entities.unknownCode', { code: 9 })).toBe('Typ 9')
     expect(i18n.t('entities.unknownZero')).toBe('Typ 0')
+  })
+
+  it('contains generic and entity-specific audit field labels', () => {
+    expect(Object.keys(auditFieldLabels.default)).toHaveLength(91)
+    expect(i18n.t('auditFieldLabels.default.OrganizationId')).toBe('Identyfikator organizacji')
+    expect(i18n.t('auditFieldLabels.default.SubjectValueDescription')).toBe('Opis wartości przedmiotu umowy')
+    expect(i18n.t('auditFieldLabels.byEntityType.5.Number')).toBe('Numer faktury')
+    expect(auditFieldLabels.default).not.toHaveProperty('P4')
+    expect(auditFieldLabels.default).not.toHaveProperty('ExcludingAuthority')
+    expect(auditFieldLabels.default).not.toHaveProperty('FoundingContractId')
   })
 })

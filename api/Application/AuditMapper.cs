@@ -7,29 +7,6 @@ namespace AuditApi.Application;
 
 public sealed class AuditMapper
 {
-    private static readonly IReadOnlyDictionary<string, string> FieldLabels = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-    {
-        ["Number"] = "Numer",
-        ["InternalNumber"] = "Numer wewnętrzny",
-        ["Subject"] = "Przedmiot umowy",
-        ["ContractGrossValue"] = "Wartość brutto umowy",
-        ["ContractNetValue"] = "Wartość netto umowy",
-        ["EffectiveDate"] = "Data obowiązywania",
-        ["ExecutionDate"] = "Data wykonania",
-        ["ConclusionDate"] = "Data zawarcia",
-        ["TerminationDate"] = "Data rozwiązania",
-        ["PaymentDueDate"] = "Termin płatności",
-        ["ContractorId"] = "Identyfikator kontrahenta",
-        ["Description"] = "Opis",
-        ["GrossValue"] = "Wartość brutto",
-        ["NetValue"] = "Wartość netto",
-        ["PaymentDate"] = "Data płatności",
-        ["PaymentValue"] = "Wartość płatności",
-        ["Name"] = "Nazwa",
-        ["DeletedDate"] = "Data usunięcia",
-        ["Comment"] = "Komentarz"
-    };
-
     public AuditEventDto Map(AuditLogRecord row)
     {
         var oldPayload = ParsePayload(row.OldValues);
@@ -43,7 +20,7 @@ public sealed class AuditMapper
         var changes = (fields.Count > 0
             ? fields.Select(field => new AuditChangeDto(
                 field,
-                GetFieldDisplayName(field),
+                GetFieldDisplayName(row.EntityType, field),
                 oldPayload.Values.GetValueOrDefault(field),
                 newPayload.Values.GetValueOrDefault(field))).ToList()
             : [new AuditChangeDto(null, null, oldPayload.Fallback, newPayload.Fallback)])
@@ -70,7 +47,7 @@ public sealed class AuditMapper
             changes);
     }
 
-    public static string GetFieldDisplayName(string field) => FieldLabels.GetValueOrDefault(field, field);
+    public static string GetFieldDisplayName(int entityType, string field) => FieldLabelCatalog.GetDisplayName(entityType, field);
 
     public static string GetEntityTypeName(int code) => code switch
     {

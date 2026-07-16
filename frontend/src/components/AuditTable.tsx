@@ -26,6 +26,12 @@ function entityLabel(entity: string, entityTypeCode: number, t: TFunction) {
   return key ? t(`entities.${key}`) : t('entities.unknownCode', { code: entityTypeCode })
 }
 
+function fieldLabel(fieldName: string | null, fallback: string | null, entityTypeCode: number, t: TFunction) {
+  if (!fieldName) return fallback ?? '—'
+  const generic = t(`auditFieldLabels.default.${fieldName}`, { defaultValue: fallback ?? fieldName })
+  return t(`auditFieldLabels.byEntityType.${entityTypeCode}.${fieldName}`, { defaultValue: generic })
+}
+
 function EventHeader({ item, dateFormatter, timeFormatter }: { item: AuditEvent; dateFormatter: Intl.DateTimeFormat; timeFormatter: Intl.DateTimeFormat }) {
   const { t } = useTranslation()
   const [copyState, setCopyState] = useState<{ result: 'idle' | 'copied' | 'error'; announcement: number }>({ result: 'idle', announcement: 0 })
@@ -101,6 +107,7 @@ function ValueCell({ value, variant }: { value: string | null; variant: ValueVar
 
 function ChangeRow({ item, change }: { item: AuditEvent; change: AuditChange }) {
   const { t } = useTranslation()
+  const displayName = fieldLabel(change.fieldName, change.fieldDisplayName, item.entityTypeCode, t)
   const jsonDiff = useMemo(
     () => item.operationType === 'Modified' ? createJsonDiff(change.oldValue, change.newValue) : null,
     [item.operationType, change.oldValue, change.newValue],
@@ -108,8 +115,8 @@ function ChangeRow({ item, change }: { item: AuditEvent; change: AuditChange }) 
 
   return <div className="grid bg-white md:grid-cols-[280px_minmax(0,1fr)]">
     <div className="border-b border-[#E5E9F0] px-6 py-4 md:border-r md:border-b-0">
-      <span className="font-semibold text-slate-800">{change.fieldDisplayName ?? '—'}</span>
-      {change.fieldName && change.fieldName !== change.fieldDisplayName && <code className="mt-1 block break-all text-[11px] text-slate-400">{change.fieldName}</code>}
+      <span className="font-semibold text-slate-800">{displayName}</span>
+      {change.fieldName && change.fieldName !== displayName && <code className="mt-1 block break-all text-[11px] text-slate-400">{change.fieldName}</code>}
     </div>
     {jsonDiff ? <div className="min-w-0 px-6 py-4 leading-6"><JsonDiff data={jsonDiff} /></div> : item.operationType === 'Added' ? <div className="min-w-0 px-6 py-4 leading-6">
       <span className="sr-only">{t('table.newValue')}: </span><ValueCell value={change.newValue} variant="plain" />

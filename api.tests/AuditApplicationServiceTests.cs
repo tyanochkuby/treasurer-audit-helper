@@ -78,6 +78,24 @@ public sealed class AuditApplicationServiceTests
     }
 
     [Fact]
+    public void Mapper_uses_shared_entity_labels_and_preserves_ambiguous_field_names()
+    {
+        var item = new AuditMapper().Map(CreateRow(
+            _contractId,
+            33,
+            1,
+            5,
+            null,
+            "{\"Number\":\"FV/1\",\"OrganizationId\":\"org\",\"P4\":\"x\"}"));
+
+        Assert.Collection(
+            item.Changes,
+            change => Assert.Equal(("Number", "Numer faktury"), (change.FieldName, change.FieldDisplayName)),
+            change => Assert.Equal(("OrganizationId", "Identyfikator organizacji"), (change.FieldName, change.FieldDisplayName)),
+            change => Assert.Equal(("P4", "P4"), (change.FieldName, change.FieldDisplayName)));
+    }
+
+    [Fact]
     public async Task Unknown_entity_codes_are_not_mislabelled()
     {
         var repository = CreateRepository();
