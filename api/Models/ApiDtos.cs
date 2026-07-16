@@ -6,7 +6,9 @@ public sealed record AccessRequest(string? Code);
 
 public sealed record ApiError(string Message);
 
-public sealed record ContractDto(Guid Id, Guid OrganizationId, string DisplayName, int AuditEventCount);
+public sealed record ContractDto(Guid Id, Guid OrganizationId, string DisplayName);
+
+public sealed record ContractAuditCountDto(Guid ContractId, int AuditEventCount);
 
 public sealed record AuditChangeDto(
     string? FieldName,

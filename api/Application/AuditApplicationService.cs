@@ -75,7 +75,7 @@ public sealed class AuditApplicationService(
         var displayName = string.IsNullOrWhiteSpace(contract.Subject)
             ? identifier
             : $"{identifier} — {contract.Subject.Trim()}";
-        return new(contract.Id, contract.OrganizationId, displayName, contract.AuditEventCount);
+        return new(contract.Id, contract.OrganizationId, displayName);
     }
 
     private static bool MatchesSearch(AuditEventDto item, string? search)

@@ -110,7 +110,7 @@ public sealed class AuditApplicationServiceTests
     private FakeAuditRepository CreateRepository()
     {
         var repository = new FakeAuditRepository();
-        repository.Contracts.Add(new ContractRecord(_contractId, _organizationId, "12/2026", "INT-1", "Testowa umowa", 0));
+        repository.Contracts.Add(new ContractRecord(_contractId, _organizationId, "12/2026", "INT-1", "Testowa umowa"));
         return repository;
     }
 

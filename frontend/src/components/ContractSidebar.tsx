@@ -29,9 +29,12 @@ export function ContractSidebar({ contracts, selectedId, open, onClose, onSelect
 
   const contractItems = useMemo(() => matching.map((contract) => {
     const selected = contract.id === selectedId
+    const countLabel = contract.auditEventCount === undefined
+      ? t('sidebar.auditEventCountLoading')
+      : t('sidebar.auditEventCount', { count: contract.auditEventCount })
     return <li key={contract.id} className="min-w-0 [contain-intrinsic-size:auto_69px] [content-visibility:auto]">
       <Button variant="ghost" onClick={() => { onSelect(contract.id); onClose() }} aria-current={selected ? 'true' : undefined} className={`group h-auto w-full min-w-0 max-w-full justify-start gap-3 rounded-none border-l-4 px-4 py-3.5 text-left whitespace-normal ${selected ? 'border-brand-blue bg-blue-50/80 hover:bg-blue-50/80' : 'border-transparent hover:bg-slate-50'}`}>
-        <span title={t('sidebar.auditEventCount', { count: contract.auditEventCount })} aria-label={t('sidebar.auditEventCount', { count: contract.auditEventCount })} className={`grid min-w-8 shrink-0 place-items-center rounded-full px-1.5 py-1 font-mono text-[11px] font-semibold leading-4 ${selected ? 'bg-brand-blue text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200'}`}>{contract.auditEventCount}</span>
+        <span title={countLabel} aria-label={countLabel} className={`grid min-w-8 shrink-0 place-items-center rounded-full px-1.5 py-1 font-mono text-[11px] font-semibold leading-4 ${selected ? 'bg-brand-blue text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200'}`}>{contract.auditEventCount ?? '…'}</span>
         <span className="min-w-0 flex-1">
           <MiddleTruncate value={contract.displayName} className={`text-sm font-semibold leading-5 ${selected ? 'text-brand-blue-dark' : 'text-slate-800'}`} />
           <span className="mt-1 block truncate whitespace-nowrap text-[11px] leading-4 text-slate-400" title={t('sidebar.organization', { id: contract.organizationId })}>{t('sidebar.organization', { id: formatOrganizationId(contract.organizationId) })}</span>

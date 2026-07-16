@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query'
 import { BrowserRouter } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -10,20 +10,51 @@ import { Card } from './components/ui/card'
 import { Skeleton } from './components/ui/skeleton'
 
 function Application() {
+  const contractQueryFreshnessMs = 5 * 60 * 1000
   const { t } = useTranslation()
   const client = useQueryClient()
   const [requiresAccess, setRequiresAccess] = useState(false)
-  const contracts = useQuery({ queryKey: ['contracts'], queryFn: api.contracts, enabled: !requiresAccess, retry: false })
+  const contracts = useQuery({
+    queryKey: ['contracts'],
+    queryFn: api.contracts,
+    enabled: !requiresAccess,
+    retry: false,
+    staleTime: contractQueryFreshnessMs,
+    refetchOnWindowFocus: false,
+  })
+  const auditCounts = useQuery({
+    queryKey: ['contract-audit-counts'],
+    queryFn: api.contractAuditCounts,
+    enabled: !requiresAccess && contracts.isSuccess,
+    retry: false,
+    staleTime: contractQueryFreshnessMs,
+    refetchOnWindowFocus: false,
+  })
   const unauthorized = contracts.error instanceof ApiError && contracts.error.status === 401
+  const contractsWithCounts = useMemo(() => {
+    const countByContract = new Map(auditCounts.data?.map(count => [count.contractId, count.auditEventCount]))
+    return contracts.data?.map(contract => ({
+      ...contract,
+      auditEventCount: countByContract.get(contract.id),
+    }))
+  }, [auditCounts.data, contracts.data])
 
   const onUnauthorized = useCallback(() => {
     client.clear()
     setRequiresAccess(true)
   }, [client])
 
+  useEffect(() => {
+    if (auditCounts.error instanceof ApiError && auditCounts.error.status === 401) onUnauthorized()
+  }, [auditCounts.error, onUnauthorized])
+
   async function afterAccess() {
     setRequiresAccess(false)
-    await client.fetchQuery({ queryKey: ['contracts'], queryFn: api.contracts })
+    await client.fetchQuery({
+      queryKey: ['contracts'],
+      queryFn: api.contracts,
+      staleTime: contractQueryFreshnessMs,
+    })
   }
 
   async function logout() {
@@ -33,7 +64,7 @@ function Application() {
   if (requiresAccess || unauthorized) return <AccessScreen onSuccess={afterAccess} />
   if (contracts.isPending) return <div role="status" className="grid h-dvh overflow-y-auto overscroll-contain bg-canvas"><div className="place-self-center text-center"><div className="mx-auto mb-5"><Brand /></div><div className="mx-auto h-1.5 w-48 overflow-hidden rounded-full bg-slate-200"><Skeleton className="h-full w-1/2 rounded-full bg-brand-blue" /></div><p className="mt-4 text-sm text-slate-500">{t('app.loadingAccess')}</p></div></div>
   if (contracts.isError) return <div role="alert" className="grid h-dvh overflow-y-auto overscroll-contain bg-canvas p-6"><Card className="place-self-center max-w-md gap-0 border border-red-200 bg-white p-8 text-center shadow-sm"><h1 className="text-xl font-bold text-brand-navy">{t('app.unavailableTitle')}</h1><p className="mt-3 text-sm leading-6 text-slate-500">{t('app.unavailableDescription')}</p><Button onClick={() => contracts.refetch()} className="mx-auto mt-5 h-auto bg-brand-blue px-5 py-2.5 font-bold text-white hover:bg-brand-blue-dark">{t('app.retry')}</Button></Card></div>
-  return <MainScreen contracts={contracts.data} onUnauthorized={onUnauthorized} onLogout={logout} />
+  return <MainScreen contracts={contractsWithCounts ?? contracts.data} onUnauthorized={onUnauthorized} onLogout={logout} />
 }
 
 export default function App() {

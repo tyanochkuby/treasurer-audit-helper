@@ -20,7 +20,7 @@ public sealed class CsvExportServiceTests
     [Fact]
     public void Csv_preserves_polish_characters_and_escapes_quotes_delimiters_and_newlines()
     {
-        var contract = new ContractDto(Guid.NewGuid(), Guid.NewGuid(), "Umowa Żółć; \"ważna\"", 0);
+        var contract = new ContractDto(Guid.NewGuid(), Guid.NewGuid(), "Umowa Żółć; \"ważna\"");
         var change = new AuditChangeDto("Comment", "Komentarz", "stara; wartość", "nowa\n\"wartość\"");
         var item = new AuditEventDto(
             "1", contract.Id, new DateTime(2026, 7, 14, 8, 0, 0, DateTimeKind.Utc),
@@ -41,7 +41,7 @@ public sealed class CsvExportServiceTests
     [Fact]
     public void Csv_describes_date_filters_as_the_original_warsaw_calendar_dates()
     {
-        var contract = new ContractDto(Guid.NewGuid(), Guid.NewGuid(), "Umowa", 0);
+        var contract = new ContractDto(Guid.NewGuid(), Guid.NewGuid(), "Umowa");
         var history = new AuditHistoryDto(
             contract.Id,
             new DateTime(2026, 7, 15, 10, 0, 0, DateTimeKind.Utc),
@@ -64,7 +64,7 @@ public sealed class CsvExportServiceTests
     [Fact]
     public void Csv_preserves_events_without_meaningful_field_differences()
     {
-        var contract = new ContractDto(Guid.NewGuid(), Guid.NewGuid(), "Umowa", 0);
+        var contract = new ContractDto(Guid.NewGuid(), Guid.NewGuid(), "Umowa");
         var item = new AuditEventDto(
             "42", contract.Id, new DateTime(2026, 7, 14, 8, 0, 0, DateTimeKind.Utc),
             "anna@example.pl", Guid.NewGuid(), "Modified", 1, "ContractHeaderEntity", Guid.NewGuid(),

@@ -10,6 +10,7 @@ var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults(worker => worker.UseMiddleware<ExceptionHandlingMiddleware>())
     .ConfigureServices(services =>
     {
+        services.AddMemoryCache();
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<AppSettings>();
         services.AddSingleton<ISqlConnectionFactory, SqlConnectionFactory>();
@@ -17,6 +18,7 @@ var host = new HostBuilder()
         services.AddSingleton<AccessSessionService>();
         services.AddSingleton<AuditMapper>();
         services.AddSingleton<AuditApplicationService>();
+        services.AddSingleton<ContractAuditCountService>();
         services.AddSingleton<CsvExportService>();
     })
     .Build();

@@ -37,6 +37,7 @@ export const pl = {
     auditEventCount_few: '{{count}} zdarzenia',
     auditEventCount_many: '{{count}} zdarzeń',
     auditEventCount_other: '{{count}} zdarzenia',
+    auditEventCountLoading: 'Ładowanie liczby zdarzeń',
   },
   main: {
     logout: 'Wyloguj',

@@ -79,9 +79,23 @@ public sealed class SqlAuditRepository(ISqlConnectionFactory connectionFactory) 
     public async Task<IReadOnlyList<ContractRecord>> GetContractsAsync(CancellationToken cancellationToken)
     {
         const string sql = """
+            SELECT Id, OrganizationId, Number, InternalNumber, Subject
+            FROM dbo.DocumentHeader
+            WHERE DocumentType = 1 AND DeletedDate IS NULL
+            ORDER BY COALESCE(NULLIF(Number, ''), NULLIF(InternalNumber, ''), NULLIF(Subject, '')), Id;
+            """;
+
+        await using var connection = connectionFactory.Create();
+        var rows = await connection.QueryAsync<ContractRecord>(new CommandDefinition(sql, cancellationToken: cancellationToken));
+        return rows.AsList();
+    }
+
+    public async Task<IReadOnlyList<ContractAuditCountRecord>> GetContractAuditCountsAsync(CancellationToken cancellationToken)
+    {
+        const string sql = """
             SET NOCOUNT ON;
 
-            SELECT Id, OrganizationId, Number, InternalNumber, Subject
+            SELECT Id, OrganizationId
             INTO #Contracts
             FROM dbo.DocumentHeader
             WHERE DocumentType = 1 AND DeletedDate IS NULL;
@@ -168,26 +182,25 @@ public sealed class SqlAuditRepository(ISqlConnectionFactory connectionFactory) 
                 WHERE a.Type IN (1, 2, 3)
             ) matched;
 
-            SELECT c.Id, c.OrganizationId, c.Number, c.InternalNumber, c.Subject,
-                   COALESCE(a.AuditEventCount, 0) AS AuditEventCount
+            SELECT c.Id AS ContractId, COALESCE(a.AuditEventCount, 0) AS AuditEventCount
             FROM #Contracts c
             LEFT JOIN (
                 SELECT ContractId, COUNT(*) AS AuditEventCount
                 FROM #ContractAudit
                 GROUP BY ContractId
             ) a ON a.ContractId = c.Id
-            ORDER BY COALESCE(NULLIF(c.Number, ''), NULLIF(c.InternalNumber, ''), NULLIF(c.Subject, '')), c.Id;
+            ORDER BY c.Id;
             """;
 
         await using var connection = connectionFactory.Create();
-        var rows = await connection.QueryAsync<ContractRecord>(new CommandDefinition(sql, cancellationToken: cancellationToken, commandTimeout: 30));
+        var rows = await connection.QueryAsync<ContractAuditCountRecord>(new CommandDefinition(sql, cancellationToken: cancellationToken, commandTimeout: 30));
         return rows.AsList();
     }
 
     public async Task<ContractRecord?> GetContractAsync(Guid contractId, CancellationToken cancellationToken)
     {
         const string sql = """
-            SELECT Id, OrganizationId, Number, InternalNumber, Subject, 0 AS AuditEventCount
+            SELECT Id, OrganizationId, Number, InternalNumber, Subject
             FROM dbo.DocumentHeader
             WHERE Id = @ContractId AND DocumentType = 1 AND DeletedDate IS NULL;
             """;

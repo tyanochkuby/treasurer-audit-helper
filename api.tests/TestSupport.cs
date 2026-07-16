@@ -14,6 +14,9 @@ internal sealed class FakeAuditRepository : IAuditRepository
     public Task<IReadOnlyList<ContractRecord>> GetContractsAsync(CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<ContractRecord>>(Contracts);
 
+    public Task<IReadOnlyList<ContractAuditCountRecord>> GetContractAuditCountsAsync(CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<ContractAuditCountRecord>>([]);
+
     public Task<ContractRecord?> GetContractAsync(Guid contractId, CancellationToken cancellationToken) =>
         Task.FromResult(Contracts.SingleOrDefault(contract => contract.Id == contractId));
 
