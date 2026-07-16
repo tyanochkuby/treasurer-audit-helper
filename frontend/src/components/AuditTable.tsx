@@ -96,13 +96,14 @@ function valueClass(variant: ValueVariant) {
 
 function ValueCell({ value, variant }: { value: string | null; variant: ValueVariant }) {
   const { t } = useTranslation()
+  const [expanded, setExpanded] = useState(false)
   if (value === null || value === '') return <span className="text-[15px] text-[#B0B7C3]">—</span>
   const isLong = value.length > 90 || value.includes('\n')
   if (!isLong) return <span className={`inline-block max-w-full break-words [overflow-wrap:anywhere] ${valueClass(variant)}`}>{value}</span>
-  return <details className="group max-w-full">
-    <summary className="cursor-pointer list-none"><span className={`inline-block max-w-full break-words [overflow-wrap:anywhere] ${valueClass(variant)}`}>{value.slice(0, 72)}…</span> <span className="text-xs font-bold text-brand-blue hover:underline">{t('table.showAll')}</span></summary>
-    <div className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap break-words border-l-2 border-slate-200 pl-3 text-[15px] font-normal leading-6 text-slate-700 [overflow-wrap:anywhere]">{value}</div>
-  </details>
+  return <div className="max-w-full">
+    <span className={`inline max-w-full whitespace-pre-wrap break-words [overflow-wrap:anywhere] ${valueClass(variant)}`}>{expanded ? value : `${value.slice(0, 72)}…`}</span>{' '}
+    <button type="button" aria-expanded={expanded} onClick={() => setExpanded((current) => !current)} className="text-xs font-bold text-brand-blue hover:underline">{expanded ? t('table.hideAll') : t('table.showAll')}</button>
+  </div>
 }
 
 function ChangeRow({ item, change }: { item: AuditEvent; change: AuditChange }) {

@@ -97,6 +97,7 @@ export const pl = {
   auditFieldLabels,
   table: {
     showAll: 'Pokaż całość',
+    hideAll: 'Zwiń',
     noFilteredResults: 'Brak wyników dla wybranych filtrów',
     noHistory: 'Brak historii zmian',
     noFilteredResultsDescription: 'Zmień lub wyczyść filtry, aby zobaczyć inne wpisy.',

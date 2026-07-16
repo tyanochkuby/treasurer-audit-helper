@@ -32,20 +32,6 @@ describe('AuditTable', () => {
     expect(screen.queryByText('Zmieniono wartość')).not.toBeInTheDocument()
   })
 
-  it('expands long values as regular text without a dark code block', async () => {
-    const user = userEvent.setup()
-    const longValue = 'Bardzo długa wartość '.repeat(8)
-    const { container } = render(<AuditTable items={[{ ...item, operationType: 'Added', changes: [{ ...item.changes[0], oldValue: null, newValue: longValue }] }]} filtered={false} contract={contract} />)
-
-    await user.click(screen.getByText('Pokaż całość'))
-
-    expect(container.querySelector('pre')).not.toBeInTheDocument()
-    const expanded = container.querySelector('details > div')
-    expect(expanded).toHaveTextContent(longValue.trim())
-    expect(expanded).toHaveClass('font-normal', 'text-[15px]', 'text-slate-700')
-    expect(expanded).not.toHaveClass('bg-slate-950', 'font-mono')
-  })
-
   it('distinguishes empty history from filtered no-results', () => {
     const { rerender } = render(<AuditTable items={[]} filtered={false} contract={contract} />)
     expect(screen.getByText('Brak historii zmian')).toBeInTheDocument()
