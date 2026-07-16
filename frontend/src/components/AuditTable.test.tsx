@@ -16,6 +16,9 @@ describe('AuditTable', () => {
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
     expect(screen.getByText('120000')).toBeInTheDocument()
     expect(screen.getByText('135000')).toBeInTheDocument()
+    expect(screen.getByText('120000')).toHaveClass('bg-[#FEF1F1]', 'text-[13px]', 'font-normal', 'line-through')
+    expect(screen.getByText('135000')).toHaveClass('bg-[#EDF9F0]', 'text-[15px]', 'font-medium')
+    expect(screen.getByText('→')).toHaveClass('text-[#B0B7C3]')
     expect(screen.getByText('Poprzednia wartość:')).toHaveClass('sr-only')
     expect(screen.getByText('Nowa wartość:')).toHaveClass('sr-only')
     expect(screen.getByText('Wartość brutto umowy')).toBeInTheDocument()
@@ -38,10 +41,20 @@ describe('AuditTable', () => {
   })
 
   it('shows only the new value for added fields', () => {
-    const { container } = render(<AuditTable items={[{ ...item, operationType: 'Added', changes: [{ ...item.changes[0], oldValue: null }] }]} filtered={false} />)
+    render(<AuditTable items={[{ ...item, operationType: 'Added', changes: [{ ...item.changes[0], oldValue: null }] }]} filtered={false} />)
 
     expect(screen.getByText('Nowa wartość:')).toHaveClass('sr-only')
     expect(screen.queryByText('Poprzednia wartość:')).not.toBeInTheDocument()
-    expect(container.querySelector('svg')).not.toBeInTheDocument()
+    expect(screen.queryByText('→')).not.toBeInTheDocument()
+    expect(screen.getByText('135000')).toHaveClass('text-[15px]', 'font-medium', 'text-[#1F2937]')
+    expect(screen.getByText('135000')).not.toHaveClass('bg-[#EDF9F0]')
+  })
+
+  it('preserves the previous value as plain evidence for deleted fields', () => {
+    render(<AuditTable items={[{ ...item, operationType: 'Deleted', changes: [{ ...item.changes[0], newValue: null }] }]} filtered={false} />)
+
+    expect(screen.getByText('120000')).toHaveClass('text-[15px]', 'font-medium', 'text-[#1F2937]')
+    expect(screen.getByText('Poprzednia wartość:')).toHaveClass('sr-only')
+    expect(screen.queryByText('→')).not.toBeInTheDocument()
   })
 })

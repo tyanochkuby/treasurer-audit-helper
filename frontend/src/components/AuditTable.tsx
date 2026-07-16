@@ -2,7 +2,6 @@ import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import type { AuditEvent } from '../types'
-import { ArrowRightIcon } from './Icons'
 import { Badge } from './ui/badge'
 import { Card } from './ui/card'
 
@@ -23,13 +22,21 @@ function entityLabel(entity: string, t: TFunction) {
   return key ? t(`entities.${key}`) : entity
 }
 
-function ValueCell({ value }: { value: string | null }) {
+type ValueVariant = 'old' | 'new' | 'plain'
+
+function valueClass(variant: ValueVariant) {
+  if (variant === 'old') return 'rounded-[6px] bg-[#FEF1F1] px-2 py-0.5 text-[13px] font-normal text-[#8A93A3] line-through'
+  if (variant === 'new') return 'rounded-[6px] bg-[#EDF9F0] px-2 py-0.5 text-[15px] font-medium text-[#1F2937]'
+  return 'text-[15px] font-medium text-[#1F2937]'
+}
+
+function ValueCell({ value, variant }: { value: string | null; variant: ValueVariant }) {
   const { t } = useTranslation()
-  if (value === null || value === '') return <span className="text-slate-400">—</span>
+  if (value === null || value === '') return <span className="text-[15px] text-[#B0B7C3]">—</span>
   const isLong = value.length > 90 || value.includes('\n')
-  if (!isLong) return <span className="break-words">{value}</span>
-  return <details className="group max-w-[28rem]">
-    <summary className="cursor-pointer list-none text-brand-blue hover:underline">{value.slice(0, 72)}… <span className="text-xs font-bold">{t('table.showAll')}</span></summary>
+  if (!isLong) return <span className={`inline-block max-w-full break-words [overflow-wrap:anywhere] ${valueClass(variant)}`}>{value}</span>
+  return <details className="group max-w-full">
+    <summary className="cursor-pointer list-none"><span className={`inline-block max-w-full break-words [overflow-wrap:anywhere] ${valueClass(variant)}`}>{value.slice(0, 72)}…</span> <span className="text-xs font-bold text-brand-blue hover:underline">{t('table.showAll')}</span></summary>
     <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-slate-950 p-3 text-xs leading-5 text-slate-100">{value}</pre>
   </details>
 }
@@ -66,20 +73,20 @@ export function AuditTable({ items, filtered }: { items: AuditEvent[]; filtered:
         </div>
       </header>
 
-      {item.changes.length > 0 ? <div className="divide-y divide-slate-200 border-t border-slate-200">
-        {item.changes.map((change, index) => <div key={`${item.id}-${change.fieldName ?? index}`} className="grid bg-white hover:bg-blue-50/40 md:grid-cols-[minmax(10rem,28%)_minmax(0,1fr)]">
-          <div className="border-b border-slate-100 px-4 py-3.5 md:border-r md:border-b-0">
+      {item.changes.length > 0 ? <div className="divide-y divide-[#E5E9F0] border-t border-[#E5E9F0]">
+        {item.changes.map((change, index) => <div key={`${item.id}-${change.fieldName ?? index}`} className="grid bg-white md:grid-cols-[280px_minmax(0,1fr)]">
+          <div className="border-b border-[#E5E9F0] px-6 py-4 md:border-r md:border-b-0">
             <span className="font-semibold text-slate-800">{change.fieldDisplayName ?? '—'}</span>
             {change.fieldName && change.fieldName !== change.fieldDisplayName && <code className="mt-1 block break-all text-[11px] text-slate-400">{change.fieldName}</code>}
           </div>
-          {item.operationType === 'Added' ? <div className="min-w-0 px-4 py-3.5 leading-6 text-slate-700">
-            <span className="sr-only">{t('table.newValue')}: </span><ValueCell value={change.newValue} />
-          </div> : item.operationType === 'Deleted' ? <div className="min-w-0 px-4 py-3.5 leading-6 text-slate-700">
-            <span className="sr-only">{t('table.previousValue')}: </span><ValueCell value={change.oldValue} />
-          </div> : <div className="flex min-w-0 flex-wrap items-center gap-3 px-4 py-3.5 leading-6 text-slate-700">
-            <div className="min-w-48 flex-1"><span className="sr-only">{t('table.previousValue')}: </span><ValueCell value={change.oldValue} /></div>
-            <ArrowRightIcon className="h-4 w-4 shrink-0 text-slate-400" />
-            <div className="min-w-48 flex-1"><span className="sr-only">{t('table.newValue')}: </span><ValueCell value={change.newValue} /></div>
+          {item.operationType === 'Added' ? <div className="min-w-0 px-6 py-4 leading-6">
+            <span className="sr-only">{t('table.newValue')}: </span><ValueCell value={change.newValue} variant="plain" />
+          </div> : item.operationType === 'Deleted' ? <div className="min-w-0 px-6 py-4 leading-6">
+            <span className="sr-only">{t('table.previousValue')}: </span><ValueCell value={change.oldValue} variant="plain" />
+          </div> : <div className="flex min-w-0 flex-wrap items-center gap-3 px-6 py-4 leading-6">
+            <div className="max-w-full"><span className="sr-only">{t('table.previousValue')}: </span><ValueCell value={change.oldValue} variant="old" /></div>
+            <span className="shrink-0 text-[15px] text-[#B0B7C3]" aria-hidden="true">→</span>
+            <div className="max-w-full"><span className="sr-only">{t('table.newValue')}: </span><ValueCell value={change.newValue} variant="new" /></div>
           </div>}
         </div>)}
       </div> : <p className="border-t border-slate-200 px-4 py-4 text-sm italic text-slate-500">{t('table.noRecordedDifference')}</p>}
