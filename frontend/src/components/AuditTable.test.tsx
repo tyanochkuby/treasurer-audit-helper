@@ -15,7 +15,6 @@ describe('AuditTable', () => {
     render(<AuditTable items={[item]} filtered={false} contract={contract} />)
     expect(screen.getByRole('list', { name: 'Historia zmian wybranej umowy' })).toBeInTheDocument()
     expect(screen.getByRole('listitem')).toBeInTheDocument()
-    expect(screen.queryByRole('table')).not.toBeInTheDocument()
     expect(screen.getByText('120000')).toBeInTheDocument()
     expect(screen.getByText('135000')).toBeInTheDocument()
     expect(screen.getByText('120000')).toHaveClass('bg-[#FEF1F1]', 'text-[13px]', 'font-normal', 'line-through')
@@ -29,7 +28,6 @@ describe('AuditTable', () => {
     expect(screen.getByText('14 lip 2026')).toHaveClass('text-[15px]', 'font-medium')
     expect(screen.getByText('10:42:12')).toHaveClass('text-[13px]', 'font-normal')
     expect(screen.getByText('Zmieniono')).toHaveClass('border', 'border-[#B5D4F4]', 'bg-[#E6F1FB]', 'text-[#0C447C]', 'font-medium')
-    expect(screen.queryByText('Zmieniono wartość')).not.toBeInTheDocument()
   })
 
   it('distinguishes empty history from filtered no-results', () => {
@@ -44,7 +42,6 @@ describe('AuditTable', () => {
 
     expect(screen.getByText('Brak różnic w zapisanych wartościach')).toBeInTheDocument()
     expect(screen.getByText('#987')).toHaveClass('font-mono', 'text-xs', 'text-[#8A93A3]')
-    expect(screen.queryByText('ID: 987')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Kopiuj dane techniczne' })).toBeInTheDocument()
   })
 

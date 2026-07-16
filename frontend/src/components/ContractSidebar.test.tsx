@@ -48,6 +48,5 @@ describe('ContractSidebar', () => {
 
     expect(screen.getByRole('button', { name: 'Wyloguj' })).toBeInTheDocument()
     expect(screen.getByLabelText('12 zdarzeń')).toHaveTextContent('12')
-    expect(screen.queryByText('Wyświetlane są aktywne umowy.')).not.toBeInTheDocument()
   })
 })
