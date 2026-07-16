@@ -39,10 +39,28 @@ public sealed class DatabaseSmokeTests
 
         var contracts = await repository.GetContractsAsync(CancellationToken.None);
         var contract = Assert.Single(contracts.Take(1));
-        var history = await repository.GetAuditAsync(contract.Id, contract.OrganizationId, AuditFilter.Empty, CancellationToken.None);
+        var snapshot = await repository.GetAuditSnapshotAsync(contract.Id, contract.OrganizationId, AuditFilter.Empty, CancellationToken.None);
         var version = await repository.GetVersionAsync(contract.Id, contract.OrganizationId, CancellationToken.None);
 
-        Assert.All(history, row => Assert.Equal(contract.Id, row.RootContractId));
+        Assert.All(snapshot.Rows, row => Assert.Equal(contract.Id, row.RootContractId));
+        Assert.Equal(version, snapshot.Version);
         Assert.True(version >= 0);
+
+        if (snapshot.Rows.Count > 0)
+        {
+            var operation = (AuditOperationType)snapshot.Rows[0].Type;
+            var filter = new AuditFilter(operation, null, null, null, null, AuditSortDirection.Ascending);
+            var filtered = await repository.GetAuditSnapshotAsync(
+                contract.Id,
+                contract.OrganizationId,
+                filter,
+                CancellationToken.None);
+
+            Assert.All(filtered.Rows, row => Assert.Equal((int)operation, row.Type));
+            Assert.Equal(version, filtered.Version);
+            Assert.Equal(
+                filtered.Rows.OrderBy(row => row.CreatedDate).ThenBy(row => row.Id).Select(row => row.Id),
+                filtered.Rows.Select(row => row.Id));
+        }
     }
 }
