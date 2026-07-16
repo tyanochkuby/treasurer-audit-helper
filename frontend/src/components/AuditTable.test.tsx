@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import type { AuditEvent } from '../types'
 import { AuditTable } from './AuditTable'
@@ -23,6 +24,9 @@ describe('AuditTable', () => {
     expect(screen.getByText('Nowa wartość:')).toHaveClass('sr-only')
     expect(screen.getByText('Wartość brutto umowy')).toBeInTheDocument()
     expect(screen.getByText('1 pole')).toBeInTheDocument()
+    expect(screen.getByText('14 lip 2026')).toHaveClass('text-[15px]', 'font-medium')
+    expect(screen.getByText('10:42:12')).toHaveClass('text-[13px]', 'font-normal')
+    expect(screen.getByText('Zmieniono')).toHaveClass('border', 'border-[#B5D4F4]', 'bg-[#E6F1FB]', 'text-[#0C447C]', 'font-medium')
     expect(screen.queryByText('Zmieniono wartość')).not.toBeInTheDocument()
   })
 
@@ -37,7 +41,9 @@ describe('AuditTable', () => {
     render(<AuditTable items={[{ ...item, changes: [] }]} filtered={false} />)
 
     expect(screen.getByText('Brak różnic w zapisanych wartościach')).toBeInTheDocument()
-    expect(screen.getByText('ID: 987')).toBeInTheDocument()
+    expect(screen.getByText('#987')).toHaveClass('font-mono', 'text-xs', 'text-[#8A93A3]')
+    expect(screen.queryByText('ID: 987')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Kopiuj dane techniczne' })).toBeInTheDocument()
   })
 
   it('shows only the new value for added fields', () => {
@@ -48,6 +54,7 @@ describe('AuditTable', () => {
     expect(screen.queryByText('→')).not.toBeInTheDocument()
     expect(screen.getByText('135000')).toHaveClass('text-[15px]', 'font-medium', 'text-[#1F2937]')
     expect(screen.getByText('135000')).not.toHaveClass('bg-[#EDF9F0]')
+    expect(screen.getByText('Dodano')).toHaveClass('border-[#9FE1CB]', 'bg-[#EDF9F0]', 'text-[#085041]')
   })
 
   it('preserves the previous value as plain evidence for deleted fields', () => {
@@ -56,5 +63,21 @@ describe('AuditTable', () => {
     expect(screen.getByText('120000')).toHaveClass('text-[15px]', 'font-medium', 'text-[#1F2937]')
     expect(screen.getByText('Poprzednia wartość:')).toHaveClass('sr-only')
     expect(screen.queryByText('→')).not.toBeInTheDocument()
+    expect(screen.getByText('Usunięto')).toHaveClass('border-[#F5C4B3]', 'bg-[#FEF1F1]', 'text-[#712B13]')
+  })
+
+  it('hides technical identifiers and copies them from the header action', async () => {
+    const user = userEvent.setup()
+    render(<AuditTable items={[{ ...item, entityTypeCode: 9, entityType: 'Unknown (9)' }]} filtered={false} />)
+
+    expect(screen.getByText('Typ 9')).toBeInTheDocument()
+    expect(screen.queryByText('entity-id')).not.toBeInTheDocument()
+    expect(screen.queryByText('actor-id')).not.toBeInTheDocument()
+    expect(screen.getByText('anna@example.pl')).toHaveAttribute('title', 'actor-id')
+
+    await user.click(screen.getByRole('button', { name: 'Kopiuj dane techniczne' }))
+
+    expect(await navigator.clipboard.readText()).toBe('AuditLog.Id: 987\nEntityId: entity-id\nUserId: actor-id')
+    expect(screen.getByRole('button', { name: 'Skopiowano dane techniczne' })).toBeInTheDocument()
   })
 })

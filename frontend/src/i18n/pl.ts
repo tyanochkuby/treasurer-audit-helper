@@ -80,12 +80,12 @@ export const pl = {
   operations: {
     Added: 'Dodano',
     Deleted: 'Usunięto',
-    Modified: 'Zmodyfikowano',
+    Modified: 'Zmieniono',
   },
   entities: {
-    Unknown: 'Nieznana',
-    unknownZero: 'Nieznana (0)',
-    unknownCode: 'Unknown ({{code}})',
+    Unknown: 'Typ 0',
+    unknownZero: 'Typ 0',
+    unknownCode: 'Typ {{code}}',
     ContractHeaderEntity: 'Umowa',
     AnnexHeaderEntity: 'Aneks',
     AnnexChangeEntity: 'Zmiana aneksu',
@@ -119,6 +119,8 @@ export const pl = {
     jsonDiffSummary_other: 'JSON · {{count}} pola różnią się',
     showJsonDiff: 'Pokaż różnice',
     hideJsonDiff: 'Ukryj różnice',
+    copyTechnicalData: 'Kopiuj dane techniczne',
+    technicalDataCopied: 'Skopiowano dane techniczne',
     noRecordedDifference: 'Brak różnic w zapisanych wartościach',
   },
 } as const

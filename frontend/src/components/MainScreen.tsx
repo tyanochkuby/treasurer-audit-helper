@@ -121,7 +121,7 @@ export function MainScreen({ contracts, onUnauthorized, onLogout }: Props) {
   return <div className="h-dvh overflow-hidden bg-canvas">
     <div className="flex h-full min-h-0">
       <ContractSidebar contracts={contracts} selectedId={selectedId} open={sidebarOpen} onClose={() => setSidebarOpen(false)} onSelect={selectContract} onLogout={onLogout} />
-      <main ref={mainRef} className="min-h-0 min-w-0 flex-1 overflow-y-auto">
+      <main ref={mainRef} className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain">
         {!selected ? <div className="h-full p-4 sm:p-6 xl:p-8"><NoSelection onOpen={() => setSidebarOpen(true)} /></div> : <>
           <div className="sticky top-0 z-20 flex flex-col gap-4 border-b border-slate-200 bg-canvas/95 px-4 py-4 shadow-sm backdrop-blur sm:px-6 xl:flex-row xl:items-start xl:justify-between xl:px-8">
             <div className="min-w-0">

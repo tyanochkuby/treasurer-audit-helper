@@ -21,4 +21,9 @@ describe('Polish translations', () => {
     expect(i18n.t('table.jsonDiffSummary', { count: 2 })).toBe('JSON · 2 pola różnią się')
     expect(i18n.t('table.jsonDiffSummary', { count: 5 })).toBe('JSON · 5 pól różni się')
   })
+
+  it('labels unsupported entity codes as technical types', () => {
+    expect(i18n.t('entities.unknownCode', { code: 9 })).toBe('Typ 9')
+    expect(i18n.t('entities.Unknown')).toBe('Typ 0')
+  })
 })

@@ -1,8 +1,9 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { createJsonDiff } from '../jsonDiffModel'
 import type { AuditEvent } from '../types'
+import { CopyIcon } from './Icons'
 import { JsonDiff } from './JsonDiff'
 import { Badge } from './ui/badge'
 import { Card } from './ui/card'
@@ -13,15 +14,47 @@ function operationLabel(operation: string, t: TFunction) {
 }
 
 function operationClass(operation: string) {
-  if (operation === 'Added') return 'bg-emerald-50 text-emerald-700 ring-emerald-600/20'
-  if (operation === 'Deleted') return 'bg-red-50 text-red-700 ring-red-600/20'
-  return 'bg-blue-50 text-blue-700 ring-blue-600/20'
+  if (operation === 'Added') return 'border-[#9FE1CB] bg-[#EDF9F0] text-[#085041]'
+  if (operation === 'Deleted') return 'border-[#F5C4B3] bg-[#FEF1F1] text-[#712B13]'
+  return 'border-[#B5D4F4] bg-[#E6F1FB] text-[#0C447C]'
 }
 
-function entityLabel(entity: string, t: TFunction) {
+function entityLabel(entity: string, entityTypeCode: number, t: TFunction) {
   const keys = ['Unknown', 'ContractHeaderEntity', 'AnnexHeaderEntity', 'AnnexChangeEntity', 'FileEntity', 'InvoiceEntity', 'PaymentScheduleEntity', 'ContractFundingEntity'] as const
   const key = keys.find((candidate) => candidate === entity)
-  return key ? t(`entities.${key}`) : entity
+  if (entityTypeCode === 0 || entityTypeCode > 7) return t('entities.unknownCode', { code: entityTypeCode })
+  return key ? t(`entities.${key}`) : t('entities.unknownCode', { code: entityTypeCode })
+}
+
+function EventHeader({ item, dateFormatter, timeFormatter }: { item: AuditEvent; dateFormatter: Intl.DateTimeFormat; timeFormatter: Intl.DateTimeFormat }) {
+  const { t } = useTranslation()
+  const [copied, setCopied] = useState(false)
+  const technicalData = `AuditLog.Id: ${item.id}\nEntityId: ${item.entityId ?? '—'}\nUserId: ${item.actorId}`
+
+  async function copyTechnicalData() {
+    await navigator.clipboard.writeText(technicalData)
+    setCopied(true)
+  }
+
+  return <header className="bg-slate-50/90 px-4 py-3.5">
+    <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+      <time dateTime={item.occurredAtUtc} className="shrink-0 whitespace-nowrap">
+        <span className="text-[15px] font-medium text-[#1F2937]">{dateFormatter.format(new Date(item.occurredAtUtc))}</span>{' '}
+        <span className="text-[13px] font-normal text-[#8A93A3]">{timeFormatter.format(new Date(item.occurredAtUtc))}</span>
+      </time>
+      <Badge className={`shrink-0 rounded-[10px] border px-2.5 py-0.5 text-xs font-medium ${operationClass(item.operationType)}`}>{operationLabel(item.operationType, t)}</Badge>
+      <div className="flex min-w-0 items-center gap-1.5">
+        <span className="font-semibold text-slate-800">{entityLabel(item.entityType, item.entityTypeCode, t)}</span>
+        <span className="text-slate-400" aria-hidden="true">·</span>
+        <span className="text-sm text-[#8A93A3]">{t('table.fieldCount', { count: item.changes.length })}</span>
+      </div>
+      <div className="ml-auto flex min-w-0 items-center gap-2">
+        <span title={item.actorId} className="truncate text-[13px] font-normal text-[#8A93A3]">{item.actorDisplayName}</span>
+        <span className="shrink-0 font-mono text-xs font-normal text-[#8A93A3]">#{item.id}</span>
+        <button type="button" onClick={copyTechnicalData} title={copied ? t('table.technicalDataCopied') : t('table.copyTechnicalData')} aria-label={copied ? t('table.technicalDataCopied') : t('table.copyTechnicalData')} className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-[#B0B7C3] transition hover:bg-slate-100 hover:text-slate-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"><CopyIcon className="h-4 w-4" /></button>
+      </div>
+    </div>
+  </header>
 }
 
 type ValueVariant = 'old' | 'new' | 'plain'
@@ -45,7 +78,8 @@ function ValueCell({ value, variant }: { value: string | null; variant: ValueVar
 
 export function AuditTable({ items, filtered }: { items: AuditEvent[]; filtered: boolean }) {
   const { t, i18n } = useTranslation()
-  const dateFormatter = useMemo(() => new Intl.DateTimeFormat(i18n.resolvedLanguage ?? i18n.language, { dateStyle: 'medium', timeStyle: 'medium', timeZone: 'Europe/Warsaw' }), [i18n.language, i18n.resolvedLanguage])
+  const dateFormatter = useMemo(() => new Intl.DateTimeFormat(i18n.resolvedLanguage ?? i18n.language, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Warsaw' }), [i18n.language, i18n.resolvedLanguage])
+  const timeFormatter = useMemo(() => new Intl.DateTimeFormat(i18n.resolvedLanguage ?? i18n.language, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'Europe/Warsaw' }), [i18n.language, i18n.resolvedLanguage])
   if (items.length === 0) return <Card className="gap-0 border border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
     <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-slate-100 text-2xl">⌁</div>
     <h3 className="mt-4 text-lg font-bold text-brand-navy">{filtered ? t('table.noFilteredResults') : t('table.noHistory')}</h3>
@@ -54,26 +88,7 @@ export function AuditTable({ items, filtered }: { items: AuditEvent[]; filtered:
 
   return <div role="list" aria-label={t('table.caption')} className="space-y-3">
     {items.map((item) => <article key={item.id} role="listitem" className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-      <header className="bg-slate-50/90 px-4 py-3.5">
-        <div className="flex flex-wrap items-start gap-x-5 gap-y-3">
-          <div className="shrink-0">
-            <time dateTime={item.occurredAtUtc} className="block font-semibold text-slate-800">{dateFormatter.format(new Date(item.occurredAtUtc))}</time>
-            <span className="mt-1 block font-mono text-[11px] text-slate-400">{t('table.eventId', { id: item.id })}</span>
-          </div>
-          <Badge className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ring-1 ring-inset ${operationClass(item.operationType)}`}>{operationLabel(item.operationType, t)}</Badge>
-          <div className="min-w-48 flex-1">
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <span className="font-semibold text-slate-800">{entityLabel(item.entityType, t)}</span>
-              <span className="text-xs text-slate-500">{t('table.fieldCount', { count: item.changes.length })}</span>
-            </div>
-            {item.entityId && <code title={item.entityId} className="mt-1 block max-w-xl truncate text-[11px] text-slate-400">{item.entityId}</code>}
-          </div>
-          <div className="min-w-40 max-w-64 sm:text-right">
-            <span className="block font-semibold text-slate-800">{item.actorDisplayName}</span>
-            <code title={item.actorId} className="mt-1 block truncate text-[11px] text-slate-400">{item.actorId}</code>
-          </div>
-        </div>
-      </header>
+      <EventHeader item={item} dateFormatter={dateFormatter} timeFormatter={timeFormatter} />
 
       {item.changes.length > 0 ? <div className="divide-y divide-[#E5E9F0] border-t border-[#E5E9F0]">
         {item.changes.map((change, index) => {

@@ -1,4 +1,5 @@
 import {
+  Copy01Icon,
   Download01Icon,
   File01Icon,
   FilterIcon as FilterGlyph,
@@ -15,6 +16,7 @@ const icon = (glyph: ComponentProps<typeof HugeiconsIcon>['icon']) =>
   (props: Props) => <HugeiconsIcon aria-hidden="true" icon={glyph} strokeWidth={1.8} {...props} />
 
 export const SearchIcon = icon(Search01Icon)
+export const CopyIcon = icon(Copy01Icon)
 export const RefreshIcon = icon(RefreshGlyph)
 export const DownloadIcon = icon(Download01Icon)
 export const LogoutIcon = icon(Logout01Icon)

@@ -43,7 +43,7 @@ export function ContractSidebar({ contracts, selectedId, open, onClose, onSelect
           <Input value={search} onChange={(event) => setSearch(event.target.value)} type="search" placeholder={t('sidebar.searchPlaceholder')} className="h-11 border-slate-300 bg-slate-50 pl-10 pr-3 text-brand-navy placeholder:text-slate-400 focus:bg-white" />
         </Label>
       </div>
-      <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto" aria-live="polite">
+      <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain" aria-live="polite">
         {matching.length === 0 ? <div className="px-6 py-10 text-center text-sm text-slate-500">{t('sidebar.empty')}</div> :
           <ul className="min-w-0 divide-y divide-slate-100 py-1">
             {matching.map((contract) => {
