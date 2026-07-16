@@ -1,3 +1,5 @@
+import auditFieldLabels from './pl/auditFieldLabels.json'
+
 export const pl = {
   app: {
     title: 'Historia zmian umów',
@@ -93,6 +95,7 @@ export const pl = {
     PaymentScheduleEntity: 'Harmonogram płatności',
     ContractFundingEntity: 'Finansowanie umowy',
   },
+  auditFieldLabels,
   table: {
     showAll: 'Pokaż całość',
     noFilteredResults: 'Brak wyników dla wybranych filtrów',

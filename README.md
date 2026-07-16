@@ -146,7 +146,9 @@ For each history request, the repository materializes the related document, invo
 
 ### Presentation and raw values
 
-One audit event is grouped with its nested field changes. The UI shows common field names in Polish and retains the technical name as supporting information; unknown fields keep their raw names. Values are not semantically rewritten. JSON is pretty-printed when valid, and long values can be expanded.
+One audit event is grouped with its nested field changes. A read-only scan of the 7,764 source audit rows found 94 distinct top-level field names. The shared Polish catalog in `frontend/src/i18n/pl/auditFieldLabels.json` provides safe labels for 91 of them and entity-specific overrides where the same technical name has a clearer meaning for an annex, file, invoice, or contract-funding record. The frontend uses the catalog through i18next, while the API embeds the same resource so Polish-label search and CSV export stay consistent.
+
+The technical field name remains visible as supporting information whenever it differs from the Polish label. `P4`, `ExcludingAuthority`, and `FoundingContractId` intentionally retain their raw names because their domain meaning is not established well enough to present a trustworthy translation. Any newly observed field also falls back to its raw name automatically; it must be added to the shared catalog only after its meaning is understood. Values themselves are not semantically rewritten. Structured JSON changes use a collapsed summary and an expandable changed-leaf diff, while other long values can be expanded.
 
 The stored payloads are snapshots and affected-column hints, not guaranteed minimal diffs. To avoid presenting unchanged snapshot fields as changes, field rows are selected by operation:
 
