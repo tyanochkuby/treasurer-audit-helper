@@ -4,6 +4,7 @@ import {
   File01Icon,
   FilterIcon as FilterGlyph,
   Logout01Icon,
+  Menu01Icon,
   RefreshIcon as RefreshGlyph,
   Search01Icon,
 } from '@hugeicons/core-free-icons'
@@ -20,5 +21,6 @@ export const CopyIcon = icon(Copy01Icon)
 export const RefreshIcon = icon(RefreshGlyph)
 export const DownloadIcon = icon(Download01Icon)
 export const LogoutIcon = icon(Logout01Icon)
+export const MenuIcon = icon(Menu01Icon)
 export const FilterIcon = icon(FilterGlyph)
 export const ContractIcon = icon(File01Icon)

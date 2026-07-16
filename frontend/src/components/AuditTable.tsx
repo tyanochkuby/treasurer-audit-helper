@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { createJsonDiff } from '../jsonDiffModel'
@@ -101,7 +101,7 @@ function ValueCell({ value, variant }: { value: string | null; variant: ValueVar
   if (!isLong) return <span className={`inline-block max-w-full break-words [overflow-wrap:anywhere] ${valueClass(variant)}`}>{value}</span>
   return <details className="group max-w-full">
     <summary className="cursor-pointer list-none"><span className={`inline-block max-w-full break-words [overflow-wrap:anywhere] ${valueClass(variant)}`}>{value.slice(0, 72)}…</span> <span className="text-xs font-bold text-brand-blue hover:underline">{t('table.showAll')}</span></summary>
-    <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-slate-950 p-3 text-xs leading-5 text-slate-100">{value}</pre>
+    <div className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap break-words border-l-2 border-slate-200 pl-3 text-[15px] font-normal leading-6 text-slate-700 [overflow-wrap:anywhere]">{value}</div>
   </details>
 }
 
@@ -114,7 +114,7 @@ function ChangeRow({ item, change }: { item: AuditEvent; change: AuditChange }) 
   )
 
   return <div className="grid bg-white md:grid-cols-[280px_minmax(0,1fr)]">
-    <div className="border-b border-[#E5E9F0] px-6 py-4 md:border-r md:border-b-0">
+    <div className="border-b border-[#E5E9F0] bg-slate-50/80 px-6 py-4 md:border-r md:border-b-0 md:bg-white">
       <span className="font-semibold text-slate-800">{displayName}</span>
       {change.fieldName && change.fieldName !== displayName && <code className="mt-1 block break-all text-[11px] text-slate-400">{change.fieldName}</code>}
     </div>
@@ -130,7 +130,7 @@ function ChangeRow({ item, change }: { item: AuditEvent; change: AuditChange }) 
   </div>
 }
 
-export function AuditTable({ items, filtered, contract }: { items: AuditEvent[]; filtered: boolean; contract: Pick<Contract, 'displayName' | 'organizationId'> }) {
+export const AuditTable = memo(function AuditTable({ items, filtered, contract }: { items: AuditEvent[]; filtered: boolean; contract: Pick<Contract, 'displayName' | 'organizationId'> }) {
   const { t, i18n } = useTranslation()
   const dateFormatter = useMemo(() => new Intl.DateTimeFormat(i18n.resolvedLanguage ?? i18n.language, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Warsaw' }), [i18n.language, i18n.resolvedLanguage])
   const timeFormatter = useMemo(() => new Intl.DateTimeFormat(i18n.resolvedLanguage ?? i18n.language, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'Europe/Warsaw' }), [i18n.language, i18n.resolvedLanguage])
@@ -149,4 +149,4 @@ export function AuditTable({ items, filtered, contract }: { items: AuditEvent[];
       </div> : <p className="border-t border-slate-200 px-4 py-4 text-sm italic text-slate-500">{t('table.noRecordedDifference')}</p>}
     </article>)}
   </div>
-}
+})

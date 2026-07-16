@@ -39,6 +39,8 @@ describe('ContractSidebar', () => {
     expect(scrollRegion).toHaveClass('overflow-x-hidden', 'overflow-y-auto')
     expect(scrollRegion).not.toContainElement(search)
     expect(search.closest('.shrink-0')).not.toBeNull()
+    expect(scrollRegion).toHaveClass('[contain:layout_paint]')
+    expect(container.querySelector('li')).toHaveClass('[content-visibility:auto]')
   })
 
   it('shows the audit event count instead of a repeated document icon', () => {

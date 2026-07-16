@@ -24,11 +24,26 @@ describe('AuditTable', () => {
     expect(screen.getByText('Poprzednia wartość:')).toHaveClass('sr-only')
     expect(screen.getByText('Nowa wartość:')).toHaveClass('sr-only')
     expect(screen.getByText('Wartość brutto umowy')).toBeInTheDocument()
+    expect(screen.getByText('Wartość brutto umowy').parentElement).toHaveClass('bg-slate-50/80', 'md:bg-white')
     expect(screen.getByText('1 pole')).toBeInTheDocument()
     expect(screen.getByText('14 lip 2026')).toHaveClass('text-[15px]', 'font-medium')
     expect(screen.getByText('10:42:12')).toHaveClass('text-[13px]', 'font-normal')
     expect(screen.getByText('Zmieniono')).toHaveClass('border', 'border-[#B5D4F4]', 'bg-[#E6F1FB]', 'text-[#0C447C]', 'font-medium')
     expect(screen.queryByText('Zmieniono wartość')).not.toBeInTheDocument()
+  })
+
+  it('expands long values as regular text without a dark code block', async () => {
+    const user = userEvent.setup()
+    const longValue = 'Bardzo długa wartość '.repeat(8)
+    const { container } = render(<AuditTable items={[{ ...item, operationType: 'Added', changes: [{ ...item.changes[0], oldValue: null, newValue: longValue }] }]} filtered={false} contract={contract} />)
+
+    await user.click(screen.getByText('Pokaż całość'))
+
+    expect(container.querySelector('pre')).not.toBeInTheDocument()
+    const expanded = container.querySelector('details > div')
+    expect(expanded).toHaveTextContent(longValue.trim())
+    expect(expanded).toHaveClass('font-normal', 'text-[15px]', 'text-slate-700')
+    expect(expanded).not.toHaveClass('bg-slate-950', 'font-mono')
   })
 
   it('distinguishes empty history from filtered no-results', () => {
