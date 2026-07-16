@@ -3,12 +3,12 @@ import { useQuery } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ApiError, api } from '../api'
-import { formatOrganizationId } from '../formatOrganizationId'
 import type { AuditFilters, Contract } from '../types'
 import { AuditFiltersPanel } from './AuditFilters'
 import { AuditTable } from './AuditTable'
 import { ContractSidebar } from './ContractSidebar'
 import { ContractIcon, DownloadIcon, RefreshIcon } from './Icons'
+import { MiddleTruncate } from './MiddleTruncate'
 import { Alert } from './ui/alert'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
@@ -123,11 +123,11 @@ export function MainScreen({ contracts, onUnauthorized, onLogout }: Props) {
       <ContractSidebar contracts={contracts} selectedId={selectedId} open={sidebarOpen} onClose={() => setSidebarOpen(false)} onSelect={selectContract} onLogout={onLogout} />
       <main ref={mainRef} className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain">
         {!selected ? <div className="h-full p-4 sm:p-6 xl:p-8"><NoSelection onOpen={() => setSidebarOpen(true)} /></div> : <>
-          <div className="sticky top-0 z-20 flex flex-col gap-4 border-b border-slate-200 bg-canvas/95 px-4 py-4 shadow-sm backdrop-blur sm:px-6 xl:flex-row xl:items-start xl:justify-between xl:px-8">
-            <div className="min-w-0">
+          <div className="sticky top-0 z-20 flex flex-col gap-3 border-b border-slate-200 bg-canvas/95 px-4 py-3 shadow-sm backdrop-blur sm:px-6 xl:h-[104px] xl:flex-row xl:items-center xl:justify-between xl:px-8">
+            <div className="min-w-0 flex-1">
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-blue">{t('main.auditHistory')}</p>
-              <h1 className="mt-1 break-words text-xl font-bold tracking-tight text-brand-navy sm:text-2xl">{selected.displayName}</h1>
-              <p className="mt-2 truncate whitespace-nowrap text-xs text-slate-500" title={t('sidebar.organization', { id: selected.organizationId })}>{t('sidebar.organization', { id: formatOrganizationId(selected.organizationId) })}</p>
+              <h1 className="mt-1 min-w-0 overflow-hidden text-xl font-bold tracking-tight text-brand-navy sm:text-2xl"><MiddleTruncate value={selected.displayName} endLength={28} /></h1>
+              <p className="mt-1 break-all text-xs text-slate-500">{t('sidebar.organization', { id: selected.organizationId })}</p>
             </div>
             <div className="flex shrink-0 flex-wrap gap-2">
               <Button variant="outline" onClick={() => setSidebarOpen(true)} className="h-10 border-slate-300 bg-white px-3 font-bold text-slate-700 shadow-sm hover:bg-slate-50 lg:hidden">{t('main.changeContract')}</Button>
@@ -150,7 +150,7 @@ export function MainScreen({ contracts, onUnauthorized, onLogout }: Props) {
               {history.data && <span>{t('main.loadedAt')} <time dateTime={history.data.generatedAtUtc}>{loadedFormatter.format(new Date(history.data.generatedAtUtc))}</time></span>}
             </div>
 
-            {history.isPending ? <LoadingHistory /> : history.isError ? <RequestError onRetry={() => history.refetch()} /> : <AuditTable items={history.data.items} filtered={hasFilters(filters)} />}
+            {history.isPending ? <LoadingHistory /> : history.isError ? <RequestError onRetry={() => history.refetch()} /> : <AuditTable items={history.data.items} filtered={hasFilters(filters)} contract={selected} />}
           </div>
         </>}
       </main>

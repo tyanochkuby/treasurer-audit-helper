@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { createJsonDiff } from '../jsonDiffModel'
-import type { AuditChange, AuditEvent } from '../types'
+import type { AuditChange, AuditEvent, Contract } from '../types'
 import { CopyIcon } from './Icons'
 import { JsonDiff } from './JsonDiff'
 import { Badge } from './ui/badge'
@@ -32,11 +32,11 @@ function fieldLabel(fieldName: string | null, fallback: string | null, entityTyp
   return t(`auditFieldLabels.byEntityType.${entityTypeCode}.${fieldName}`, { defaultValue: generic })
 }
 
-function EventHeader({ item, dateFormatter, timeFormatter }: { item: AuditEvent; dateFormatter: Intl.DateTimeFormat; timeFormatter: Intl.DateTimeFormat }) {
+function EventHeader({ item, contract, dateFormatter, timeFormatter }: { item: AuditEvent; contract: Pick<Contract, 'displayName' | 'organizationId'>; dateFormatter: Intl.DateTimeFormat; timeFormatter: Intl.DateTimeFormat }) {
   const { t } = useTranslation()
   const [copyState, setCopyState] = useState<{ result: 'idle' | 'copied' | 'error'; announcement: number }>({ result: 'idle', announcement: 0 })
   const resetCopyState = useRef<number | null>(null)
-  const technicalData = [`AuditLog.Id: ${item.id}`, ...(item.entityId ? [`EntityId: ${item.entityId}`] : []), `UserId: ${item.actorId}`].join('\n')
+  const technicalData = [`Contract: ${contract.displayName}`, `OrganizationId: ${contract.organizationId}`, `AuditLog.Id: ${item.id}`, ...(item.entityId ? [`EntityId: ${item.entityId}`] : []), `UserId: ${item.actorId}`].join('\n')
 
   useEffect(() => {
     return () => {
@@ -130,7 +130,7 @@ function ChangeRow({ item, change }: { item: AuditEvent; change: AuditChange }) 
   </div>
 }
 
-export function AuditTable({ items, filtered }: { items: AuditEvent[]; filtered: boolean }) {
+export function AuditTable({ items, filtered, contract }: { items: AuditEvent[]; filtered: boolean; contract: Pick<Contract, 'displayName' | 'organizationId'> }) {
   const { t, i18n } = useTranslation()
   const dateFormatter = useMemo(() => new Intl.DateTimeFormat(i18n.resolvedLanguage ?? i18n.language, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Warsaw' }), [i18n.language, i18n.resolvedLanguage])
   const timeFormatter = useMemo(() => new Intl.DateTimeFormat(i18n.resolvedLanguage ?? i18n.language, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'Europe/Warsaw' }), [i18n.language, i18n.resolvedLanguage])
@@ -142,7 +142,7 @@ export function AuditTable({ items, filtered }: { items: AuditEvent[]; filtered:
 
   return <div role="list" aria-label={t('table.caption')} className="space-y-3">
     {items.map((item) => <article key={item.id} role="listitem" className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-      <EventHeader item={item} dateFormatter={dateFormatter} timeFormatter={timeFormatter} />
+      <EventHeader item={item} contract={contract} dateFormatter={dateFormatter} timeFormatter={timeFormatter} />
 
       {item.changes.length > 0 ? <div className="divide-y divide-[#E5E9F0] border-t border-[#E5E9F0]">
         {item.changes.map((change, index) => <ChangeRow key={`${item.id}-${change.fieldName ?? index}`} item={item} change={change} />)}

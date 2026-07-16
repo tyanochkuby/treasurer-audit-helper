@@ -8,10 +8,11 @@ const item: AuditEvent = {
   id: '987', contractId: 'contract', occurredAtUtc: '2026-07-14T08:42:12Z', actorDisplayName: 'anna@example.pl', actorId: 'actor-id', operationType: 'Modified', entityTypeCode: 1, entityType: 'ContractHeaderEntity', entityId: 'entity-id', description: 'Zmieniono wartość',
   changes: [{ fieldName: 'ContractGrossValue', fieldDisplayName: 'Wartość brutto umowy', oldValue: '120000', newValue: '135000' }],
 }
+const contract = { displayName: 'UM123456 — Testowy przedmiot umowy', organizationId: 'e1cd1118-9795-4937-8e94-1822cae3e78f' }
 
 describe('AuditTable', () => {
   it('renders grouped old and new values', () => {
-    render(<AuditTable items={[item]} filtered={false} />)
+    render(<AuditTable items={[item]} filtered={false} contract={contract} />)
     expect(screen.getByRole('list', { name: 'Historia zmian wybranej umowy' })).toBeInTheDocument()
     expect(screen.getByRole('listitem')).toBeInTheDocument()
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
@@ -31,14 +32,14 @@ describe('AuditTable', () => {
   })
 
   it('distinguishes empty history from filtered no-results', () => {
-    const { rerender } = render(<AuditTable items={[]} filtered={false} />)
+    const { rerender } = render(<AuditTable items={[]} filtered={false} contract={contract} />)
     expect(screen.getByText('Brak historii zmian')).toBeInTheDocument()
-    rerender(<AuditTable items={[]} filtered />)
+    rerender(<AuditTable items={[]} filtered contract={contract} />)
     expect(screen.getByText('Brak wyników dla wybranych filtrów')).toBeInTheDocument()
   })
 
   it('keeps an event visible when it has no meaningful field differences', () => {
-    render(<AuditTable items={[{ ...item, changes: [] }]} filtered={false} />)
+    render(<AuditTable items={[{ ...item, changes: [] }]} filtered={false} contract={contract} />)
 
     expect(screen.getByText('Brak różnic w zapisanych wartościach')).toBeInTheDocument()
     expect(screen.getByText('#987')).toHaveClass('font-mono', 'text-xs', 'text-[#8A93A3]')
@@ -47,7 +48,7 @@ describe('AuditTable', () => {
   })
 
   it('shows only the new value for added fields', () => {
-    render(<AuditTable items={[{ ...item, operationType: 'Added', changes: [{ ...item.changes[0], oldValue: null }] }]} filtered={false} />)
+    render(<AuditTable items={[{ ...item, operationType: 'Added', changes: [{ ...item.changes[0], oldValue: null }] }]} filtered={false} contract={contract} />)
 
     expect(screen.getByText('Nowa wartość:')).toHaveClass('sr-only')
     expect(screen.queryByText('Poprzednia wartość:')).not.toBeInTheDocument()
@@ -58,7 +59,7 @@ describe('AuditTable', () => {
   })
 
   it('preserves the previous value as plain evidence for deleted fields', () => {
-    render(<AuditTable items={[{ ...item, operationType: 'Deleted', changes: [{ ...item.changes[0], newValue: null }] }]} filtered={false} />)
+    render(<AuditTable items={[{ ...item, operationType: 'Deleted', changes: [{ ...item.changes[0], newValue: null }] }]} filtered={false} contract={contract} />)
 
     expect(screen.getByText('120000')).toHaveClass('text-[15px]', 'font-medium', 'text-[#1F2937]')
     expect(screen.getByText('Poprzednia wartość:')).toHaveClass('sr-only')
@@ -68,7 +69,7 @@ describe('AuditTable', () => {
 
   it('hides technical identifiers and copies them from the header action', async () => {
     const user = userEvent.setup()
-    render(<AuditTable items={[{ ...item, entityTypeCode: 9, entityType: 'Unknown (9)' }]} filtered={false} />)
+    render(<AuditTable items={[{ ...item, entityTypeCode: 9, entityType: 'Unknown (9)' }]} filtered={false} contract={contract} />)
 
     expect(screen.getByText('Typ 9')).toBeInTheDocument()
     expect(screen.queryByText('entity-id')).not.toBeInTheDocument()
@@ -77,12 +78,12 @@ describe('AuditTable', () => {
 
     await user.click(screen.getByRole('button', { name: 'Kopiuj dane techniczne' }))
 
-    expect(await navigator.clipboard.readText()).toBe('AuditLog.Id: 987\nEntityId: entity-id\nUserId: actor-id')
+    expect(await navigator.clipboard.readText()).toBe('Contract: UM123456 — Testowy przedmiot umowy\nOrganizationId: e1cd1118-9795-4937-8e94-1822cae3e78f\nAuditLog.Id: 987\nEntityId: entity-id\nUserId: actor-id')
     expect(screen.getByRole('button', { name: 'Skopiowano dane techniczne' })).toBeInTheDocument()
   })
 
   it('uses the numeric entity type when its name and code disagree', () => {
-    render(<AuditTable items={[{ ...item, entityTypeCode: 3, entityType: 'Unknown' }]} filtered={false} />)
+    render(<AuditTable items={[{ ...item, entityTypeCode: 3, entityType: 'Unknown' }]} filtered={false} contract={contract} />)
 
     expect(screen.getByText('Typ 3')).toBeInTheDocument()
   })
@@ -96,7 +97,7 @@ describe('AuditTable', () => {
         { fieldName: 'Number', fieldDisplayName: 'Number', oldValue: '1', newValue: '2' },
         { fieldName: 'P4', fieldDisplayName: 'P4', oldValue: 'A', newValue: 'B' },
       ],
-    }]} filtered={false} />)
+    }]} filtered={false} contract={contract} />)
 
     expect(screen.getByText('Numer faktury')).toBeInTheDocument()
     expect(screen.getByText('Number')).toBeInTheDocument()
@@ -107,7 +108,7 @@ describe('AuditTable', () => {
     render(<AuditTable items={[{
       ...item,
       changes: [{ fieldName: 'futureField', fieldDisplayName: 'Przyszłe pole', oldValue: '1', newValue: '2' }],
-    }]} filtered={false} />)
+    }]} filtered={false} contract={contract} />)
 
     expect(screen.getByText('Przyszłe pole')).toBeInTheDocument()
     expect(screen.getByText('futureField')).toBeInTheDocument()
@@ -116,7 +117,7 @@ describe('AuditTable', () => {
   it('announces clipboard failures', async () => {
     const user = userEvent.setup()
     vi.spyOn(navigator.clipboard, 'writeText').mockRejectedValueOnce(new Error('denied'))
-    render(<AuditTable items={[item]} filtered={false} />)
+    render(<AuditTable items={[item]} filtered={false} contract={contract} />)
 
     await user.click(screen.getByRole('button', { name: 'Kopiuj dane techniczne' }))
 
@@ -125,18 +126,18 @@ describe('AuditTable', () => {
 
   it('omits a missing entity identifier from copied technical data', async () => {
     const user = userEvent.setup()
-    render(<AuditTable items={[{ ...item, entityId: null }]} filtered={false} />)
+    render(<AuditTable items={[{ ...item, entityId: null }]} filtered={false} contract={contract} />)
 
     await user.click(screen.getByRole('button', { name: 'Kopiuj dane techniczne' }))
 
-    expect(await navigator.clipboard.readText()).toBe('AuditLog.Id: 987\nUserId: actor-id')
+    expect(await navigator.clipboard.readText()).toBe('Contract: UM123456 — Testowy przedmiot umowy\nOrganizationId: e1cd1118-9795-4937-8e94-1822cae3e78f\nAuditLog.Id: 987\nUserId: actor-id')
   })
 
   it('restarts copy feedback after another click', async () => {
     vi.useFakeTimers()
     try {
       vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue(undefined)
-      render(<AuditTable items={[item]} filtered={false} />)
+      render(<AuditTable items={[item]} filtered={false} contract={contract} />)
       const copy = screen.getByRole('button', { name: 'Kopiuj dane techniczne' })
 
       await act(async () => { fireEvent.click(copy) })

@@ -10,6 +10,16 @@ public sealed class AuditApplicationServiceTests
     private readonly Guid _organizationId = Guid.NewGuid();
 
     [Fact]
+    public async Task Contract_list_preserves_precomputed_audit_event_counts()
+    {
+        var service = CreateService(CreateRepository());
+
+        var contract = Assert.Single(await service.GetContractsAsync(CancellationToken.None));
+
+        Assert.Equal(4, contract.AuditEventCount);
+    }
+
+    [Fact]
     public async Task History_is_scoped_and_filters_are_applied()
     {
         var repository = CreateRepository();
@@ -110,7 +120,7 @@ public sealed class AuditApplicationServiceTests
     private FakeAuditRepository CreateRepository()
     {
         var repository = new FakeAuditRepository();
-        repository.Contracts.Add(new ContractRecord(_contractId, _organizationId, "12/2026", "INT-1", "Testowa umowa"));
+        repository.Contracts.Add(new ContractRecord(_contractId, _organizationId, "12/2026", "INT-1", "Testowa umowa", 4));
         return repository;
     }
 

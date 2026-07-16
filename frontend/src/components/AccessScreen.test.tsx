@@ -4,6 +4,16 @@ import { describe, expect, it, vi } from 'vitest'
 import { AccessScreen } from './AccessScreen'
 
 describe('AccessScreen', () => {
+  it('keeps the sign-in screen focused on the access form', () => {
+    render(<AccessScreen onSuccess={vi.fn()} />)
+
+    expect(screen.getByRole('heading', { name: 'Wprowadź kod dostępu' })).toBeInTheDocument()
+    expect(screen.queryByText('Bezpieczny dostęp')).not.toBeInTheDocument()
+    expect(screen.queryByText('Kod otrzymasz od administratora systemu.')).not.toBeInTheDocument()
+    expect(screen.queryByText('Znajdź, przejrzyj i wyeksportuj pełną historię zmian wybranej umowy.')).not.toBeInTheDocument()
+    expect(screen.queryByText('Dostęp do danych audytowych')).not.toBeInTheDocument()
+  })
+
   it('submits the access code and continues after success', async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }))
     vi.stubGlobal('fetch', fetchMock)

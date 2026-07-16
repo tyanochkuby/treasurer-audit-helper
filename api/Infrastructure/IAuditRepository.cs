@@ -2,7 +2,7 @@ using AuditApi.Domain;
 
 namespace AuditApi.Infrastructure;
 
-public sealed record ContractRecord(Guid Id, Guid OrganizationId, string? Number, string? InternalNumber, string? Subject);
+public sealed record ContractRecord(Guid Id, Guid OrganizationId, string? Number, string? InternalNumber, string? Subject, int AuditEventCount);
 
 public sealed record AuditLogRecord(
     Guid RootContractId,

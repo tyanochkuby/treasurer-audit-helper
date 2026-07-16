@@ -2,6 +2,7 @@ export interface Contract {
   id: string
   organizationId: string
   displayName: string
+  auditEventCount: number
 }
 
 export interface AuditChange {
