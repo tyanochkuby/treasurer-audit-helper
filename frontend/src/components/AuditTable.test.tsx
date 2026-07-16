@@ -23,4 +23,11 @@ describe('AuditTable', () => {
     rerender(<AuditTable items={[]} filtered />)
     expect(screen.getByText('Brak wyników dla wybranych filtrów')).toBeInTheDocument()
   })
+
+  it('keeps an event visible when it has no meaningful field differences', () => {
+    render(<AuditTable items={[{ ...item, changes: [] }]} filtered={false} />)
+
+    expect(screen.getByText('Brak różnic w zapisanych wartościach')).toBeInTheDocument()
+    expect(screen.getByText('ID: 987')).toBeInTheDocument()
+  })
 })

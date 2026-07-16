@@ -29,7 +29,7 @@ SQL Server: DocumentHeader + related entities + AuditLog
 
 No database credentials or access codes are sent to the browser. The API is the only component that connects to SQL Server.
 
-## Local development
+## Local setup
 
 Prerequisites:
 
@@ -50,19 +50,16 @@ Required server settings:
 | `SESSION_SIGNING_KEY` | Separate random signing key, at least 32 characters. Never reuse the access code. |
 | `COOKIE_SECURE` | Defaults to `true`. Set to `false` only for local HTTP development. |
 
-Run the API:
+From the repository root, run the API:
 
 ```bash
-cd api
-func start --dotnet-isolated --port 7071
+cd api && func start --dotnet-isolated --port 7071
 ```
 
 Run the frontend in another terminal:
 
 ```bash
-cd frontend
-pnpm install --frozen-lockfile
-pnpm dev
+cd frontend && pnpm install --frozen-lockfile && pnpm dev
 ```
 
 Vite serves the app at `http://127.0.0.1:5173` and proxies `/api` to port 7071.
@@ -149,9 +146,19 @@ The verified source schema uses SQL `int` for `AuditLog.Id`. `PaymentSchedule`, 
 
 One audit event is grouped with its nested field changes. The UI shows common field names in Polish and retains the technical name as supporting information; unknown fields keep their raw names. Values are not semantically rewritten. JSON is pretty-printed when valid, and long values can be expanded.
 
+The stored payloads are snapshots and affected-column hints, not guaranteed minimal diffs. To avoid presenting unchanged snapshot fields as changes, field rows are selected by operation:
+
+- `Added` shows fields whose new value is not null.
+- `Deleted` shows fields whose old value is not null.
+- `Modified` shows fields whose old and new serialized values differ exactly.
+
+The event itself is never discarded just because no meaningful field differences remain. The UI shows a localized “no differences in stored values” message, and CSV retains the event metadata with empty field/value columns. This preserves evidence that the operation was logged without representing null-to-null or identical values as changes.
+
+This rule is grounded in the inspected source data: 13,386 of 40,439 `Added` field rows and 108 of 1,006 `Deleted` field rows were null-to-null snapshot entries. Among 3,764 `Modified` field rows, 229 were null-to-null or identical values; 18 modified events contained no meaningful field difference at all.
+
 ### CSV contract
 
-CSV exports exactly the active contract, filters, and sort order, with one row per changed field. Files use:
+CSV exports exactly the active contract, filters, and sort order, with one row per changed field, or one metadata-only row when an event has no meaningful field differences. Files use:
 
 - UTF-8 with BOM,
 - semicolon delimiter,
