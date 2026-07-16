@@ -26,5 +26,10 @@ describe('MainScreen', () => {
 
     const heading = screen.getByRole('heading', { name: contract.displayName })
     expect(heading.closest('.sticky')).toHaveClass('top-0')
+    expect(screen.queryByRole('banner')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Wyloguj' })).toBeInTheDocument()
+    const loading = screen.getByRole('status', { name: 'Ładowanie historii' })
+    expect(loading.children).toHaveLength(3)
+    expect(loading.querySelector('.bg-brand-navy')).not.toBeInTheDocument()
   })
 })

@@ -8,4 +8,22 @@ describe('Polish translations', () => {
     expect(i18n.t('main.eventCount', { count: 5 })).toBe('5 zdarzeń')
     expect(i18n.t('main.eventCount', { count: 22 })).toBe('22 zdarzenia')
   })
+
+  it('uses Polish plural forms for changed-field counts', () => {
+    expect(i18n.t('table.fieldCount', { count: 0 })).toBe('0 pól')
+    expect(i18n.t('table.fieldCount', { count: 1 })).toBe('1 pole')
+    expect(i18n.t('table.fieldCount', { count: 2 })).toBe('2 pola')
+    expect(i18n.t('table.fieldCount', { count: 5 })).toBe('5 pól')
+  })
+
+  it('uses Polish plural forms for JSON differences', () => {
+    expect(i18n.t('table.jsonDiffSummary', { count: 1 })).toBe('JSON · 1 pole różni się')
+    expect(i18n.t('table.jsonDiffSummary', { count: 2 })).toBe('JSON · 2 pola różnią się')
+    expect(i18n.t('table.jsonDiffSummary', { count: 5 })).toBe('JSON · 5 pól różni się')
+  })
+
+  it('labels unsupported entity codes as technical types', () => {
+    expect(i18n.t('entities.unknownCode', { code: 9 })).toBe('Typ 9')
+    expect(i18n.t('entities.unknownZero')).toBe('Typ 0')
+  })
 })
