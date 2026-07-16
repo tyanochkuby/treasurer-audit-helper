@@ -113,6 +113,12 @@ export const pl = {
     fieldCount_few: '{{count}} pola',
     fieldCount_many: '{{count}} pól',
     fieldCount_other: '{{count}} pola',
+    jsonDiffSummary_one: 'JSON · {{count}} pole różni się',
+    jsonDiffSummary_few: 'JSON · {{count}} pola różnią się',
+    jsonDiffSummary_many: 'JSON · {{count}} pól różni się',
+    jsonDiffSummary_other: 'JSON · {{count}} pola różnią się',
+    showJsonDiff: 'Pokaż różnice',
+    hideJsonDiff: 'Ukryj różnice',
     noRecordedDifference: 'Brak różnic w zapisanych wartościach',
   },
 } as const

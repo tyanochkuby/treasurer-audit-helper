@@ -1,7 +1,9 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
+import { createJsonDiff } from '../jsonDiffModel'
 import type { AuditEvent } from '../types'
+import { JsonDiff } from './JsonDiff'
 import { Badge } from './ui/badge'
 import { Card } from './ui/card'
 
@@ -74,12 +76,14 @@ export function AuditTable({ items, filtered }: { items: AuditEvent[]; filtered:
       </header>
 
       {item.changes.length > 0 ? <div className="divide-y divide-[#E5E9F0] border-t border-[#E5E9F0]">
-        {item.changes.map((change, index) => <div key={`${item.id}-${change.fieldName ?? index}`} className="grid bg-white md:grid-cols-[280px_minmax(0,1fr)]">
+        {item.changes.map((change, index) => {
+          const jsonDiff = item.operationType === 'Modified' ? createJsonDiff(change.oldValue, change.newValue) : null
+          return <div key={`${item.id}-${change.fieldName ?? index}`} className="grid bg-white md:grid-cols-[280px_minmax(0,1fr)]">
           <div className="border-b border-[#E5E9F0] px-6 py-4 md:border-r md:border-b-0">
             <span className="font-semibold text-slate-800">{change.fieldDisplayName ?? '—'}</span>
             {change.fieldName && change.fieldName !== change.fieldDisplayName && <code className="mt-1 block break-all text-[11px] text-slate-400">{change.fieldName}</code>}
           </div>
-          {item.operationType === 'Added' ? <div className="min-w-0 px-6 py-4 leading-6">
+          {jsonDiff ? <div className="min-w-0 px-6 py-4 leading-6"><JsonDiff data={jsonDiff} /></div> : item.operationType === 'Added' ? <div className="min-w-0 px-6 py-4 leading-6">
             <span className="sr-only">{t('table.newValue')}: </span><ValueCell value={change.newValue} variant="plain" />
           </div> : item.operationType === 'Deleted' ? <div className="min-w-0 px-6 py-4 leading-6">
             <span className="sr-only">{t('table.previousValue')}: </span><ValueCell value={change.oldValue} variant="plain" />
@@ -88,7 +92,7 @@ export function AuditTable({ items, filtered }: { items: AuditEvent[]; filtered:
             <span className="shrink-0 text-[15px] text-[#B0B7C3]" aria-hidden="true">→</span>
             <div className="max-w-full"><span className="sr-only">{t('table.newValue')}: </span><ValueCell value={change.newValue} variant="new" /></div>
           </div>}
-        </div>)}
+        </div>})}
       </div> : <p className="border-t border-slate-200 px-4 py-4 text-sm italic text-slate-500">{t('table.noRecordedDifference')}</p>}
     </article>)}
   </div>

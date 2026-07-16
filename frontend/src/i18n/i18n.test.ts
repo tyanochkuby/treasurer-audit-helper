@@ -15,4 +15,10 @@ describe('Polish translations', () => {
     expect(i18n.t('table.fieldCount', { count: 2 })).toBe('2 pola')
     expect(i18n.t('table.fieldCount', { count: 5 })).toBe('5 pól')
   })
+
+  it('uses Polish plural forms for JSON differences', () => {
+    expect(i18n.t('table.jsonDiffSummary', { count: 1 })).toBe('JSON · 1 pole różni się')
+    expect(i18n.t('table.jsonDiffSummary', { count: 2 })).toBe('JSON · 2 pola różnią się')
+    expect(i18n.t('table.jsonDiffSummary', { count: 5 })).toBe('JSON · 5 pól różni się')
+  })
 })
