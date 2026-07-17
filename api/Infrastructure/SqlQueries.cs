@@ -2,7 +2,8 @@ namespace AuditApi.Infrastructure;
 
 internal static class SqlQueries
 {
-    public static string MaterializeAuditScope { get; } = Read("MaterializeAuditScope.sql");
+    public static string MaterializeRelatedEntityIds { get; } = Read("MaterializeRelatedEntityIds.sql");
+    public static string MaterializeAuditScope { get; } = MaterializeRelatedEntityIds + "\n" + Read("MaterializeAuditScope.sql");
     public static string GetContractAuditCounts { get; } = Read("GetContractAuditCounts.sql");
 
     private static string Read(string fileName)

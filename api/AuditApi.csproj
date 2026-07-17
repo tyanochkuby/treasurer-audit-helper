@@ -27,6 +27,8 @@
                       LogicalName="AuditApi.Infrastructure.Sql.GetContractAuditCounts.sql" />
     <EmbeddedResource Include="Infrastructure\Sql\MaterializeAuditScope.sql"
                       LogicalName="AuditApi.Infrastructure.Sql.MaterializeAuditScope.sql" />
+    <EmbeddedResource Include="Infrastructure\Sql\MaterializeRelatedEntityIds.sql"
+                      LogicalName="AuditApi.Infrastructure.Sql.MaterializeRelatedEntityIds.sql" />
     <EmbeddedResource Include="..\frontend\src\i18n\pl\auditFieldLabels.json"
                       Link="Localization\auditFieldLabels.pl.json"
                       LogicalName="AuditApi.Localization.auditFieldLabels.pl.json" />
