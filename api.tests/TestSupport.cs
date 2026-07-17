@@ -18,8 +18,6 @@ internal sealed class FakeAuditRepository : IAuditRepository
     public Task<ContractRecord?> GetContractAsync(Guid contractId, CancellationToken cancellationToken) =>
         Task.FromResult(Contracts.SingleOrDefault(contract => contract.Id == contractId));
 
-    // Filtering, scoping and ordering live in SQL and are not re-implemented here;
-    // the fake only hands back the rows a test has queued up.
     public Task<AuditSnapshot> GetAuditSnapshotAsync(
         Guid contractId,
         Guid organizationId,
