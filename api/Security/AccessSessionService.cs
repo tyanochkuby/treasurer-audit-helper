@@ -24,8 +24,7 @@ public sealed class AccessSessionService(AppSettings settings, TimeProvider time
         }
 
         var expiresAt = timeProvider.GetUtcNow().Add(settings.SessionLifetime).ToUnixTimeSeconds();
-        var nonce = Convert.ToHexString(RandomNumberGenerator.GetBytes(16));
-        var payload = Base64UrlEncode(Encoding.UTF8.GetBytes($"1|{expiresAt}|{nonce}"));
+        var payload = Base64UrlEncode(Encoding.UTF8.GetBytes($"1|{expiresAt}"));
         var signature = Sign(payload);
         token = $"{payload}.{signature}";
         return true;
@@ -56,8 +55,8 @@ public sealed class AccessSessionService(AppSettings settings, TimeProvider time
 
         try
         {
-            var payload = Encoding.UTF8.GetString(Base64UrlDecode(parts[0])).Split('|', 3);
-            return payload.Length == 3 &&
+            var payload = Encoding.UTF8.GetString(Base64UrlDecode(parts[0])).Split('|', 2);
+            return payload.Length == 2 &&
                    payload[0] == "1" &&
                    long.TryParse(payload[1], out var expiresAt) &&
                    timeProvider.GetUtcNow().ToUnixTimeSeconds() < expiresAt;
