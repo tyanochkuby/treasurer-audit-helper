@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from 'react'
+import { memo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { AuditFilters } from '../types'
@@ -21,10 +21,19 @@ const entityOptions = [
   { value: '7', key: 'entities.ContractFundingEntity' },
 ] as const
 
-export const AuditFiltersPanel = memo(function AuditFiltersPanel({ filters, unknownEntityTypes, onApply }: { filters: AuditFilters; unknownEntityTypes: number[]; onApply: (filters: AuditFilters) => void }) {
+interface Props {
+  filters: AuditFilters
+  unknownEntityTypes: number[]
+  onApply: (filters: AuditFilters) => void
+}
+
+export const AuditFiltersPanel = memo(function AuditFiltersPanel(props: Props) {
+  return <AuditFiltersForm key={JSON.stringify(props.filters)} {...props} />
+})
+
+function AuditFiltersForm({ filters, unknownEntityTypes, onApply }: Props) {
   const { t } = useTranslation()
   const [draft, setDraft] = useState(filters)
-  useEffect(() => setDraft(filters), [filters])
 
   function update<Key extends keyof AuditFilters>(key: Key, value: AuditFilters[Key]) {
     setDraft((current) => ({ ...current, [key]: value }))
@@ -94,4 +103,4 @@ export const AuditFiltersPanel = memo(function AuditFiltersPanel({ filters, unkn
       </div>
     </div>
   </form>
-})
+}

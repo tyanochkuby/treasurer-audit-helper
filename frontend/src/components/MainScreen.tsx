@@ -115,7 +115,10 @@ export function MainScreen({ contracts, onUnauthorized, onLogout }: Props) {
 
   const newDataAvailable = Boolean(history.data && version.data && history.data.version !== version.data.version)
   const unknownEntityTypes = useMemo(() => {
-    const codes = new Set(history.data?.items.map((item) => item.entityTypeCode).filter((code) => code > 7) ?? [])
+    const codes = new Set<number>()
+    for (const item of history.data?.items ?? []) {
+      if (item.entityTypeCode > 7) codes.add(item.entityTypeCode)
+    }
     const selectedCode = Number(filters.entityType)
     if (Number.isInteger(selectedCode) && selectedCode > 7) codes.add(selectedCode)
     return [...codes].sort((left, right) => left - right)
