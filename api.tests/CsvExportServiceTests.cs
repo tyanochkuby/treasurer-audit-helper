@@ -32,6 +32,7 @@ public sealed class CsvExportServiceTests
         var text = Encoding.UTF8.GetString(export.Content);
 
         Assert.True(export.Content.AsSpan().StartsWith(Encoding.UTF8.Preamble));
+        Assert.StartsWith("\uFEFFsep=;\r\n", text);
         Assert.Contains("Umowa Żółć; \"\"ważna\"\"", text);
         Assert.Contains("\"stara; wartość\"", text);
         Assert.Contains("\"nowa\n\"\"wartość\"\"\"", text);

@@ -4,31 +4,6 @@ A small, read-only audit browser for treasurers. The application lets a user sel
 
 The UI is Polish. Code, API DTOs, environment variables, and this technical documentation are English.
 
-## What is included
-
-- React 19 + TypeScript + Tailwind CSS 4 frontend using the shadcn Nova preset, Base UI primitives, Inter Variable, and Hugeicons, while retaining the iFirma-inspired navy/blue/amber visual language.
-- .NET 9 isolated Azure Functions API using Dapper and `Microsoft.Data.SqlClient`.
-- One shared access code exchanged for a signed, 30-minute, `HttpOnly` session cookie.
-- Contract search by displayed number/subject, contract UUID, and `OrganizationId`.
-- Contract-scoped audit history, deterministic sorting, explicit filters, CSV export, and a lightweight new-data check.
-- Unit, component, API-client, security, CSV, and optional read-only database smoke tests.
-
-## Architecture
-
-```text
-Browser (Polish UI)
-       |
-       | /api, signed HttpOnly cookie
-       v
-Azure Static Web Apps + .NET isolated Functions
-       |
-       | parameterized, read-only SQL through Dapper
-       v
-SQL Server: DocumentHeader + related entities + AuditLog
-```
-
-No database credentials or access codes are sent to the browser. The API is the only component that connects to SQL Server.
-
 ## Local setup
 
 Prerequisites:
@@ -53,8 +28,10 @@ Required server settings:
 From the repository root, run the API:
 
 ```bash
-cd api && func start --dotnet-isolated --port 7071
+cd api && dotnet run
 ```
+
+The Functions host listens on port 7071.
 
 Run the frontend in another terminal:
 
@@ -63,10 +40,6 @@ cd frontend && pnpm install --frozen-lockfile && pnpm dev
 ```
 
 Vite serves the app at `http://127.0.0.1:5173` and proxies `/api` to port 7071.
-
-### Frontend localization
-
-User-facing text is managed with `i18next` and `react-i18next`. Polish is the default and fallback language; its type-safe resource is in `frontend/src/i18n/pl.ts`. Components should use `useTranslation()` instead of embedding display text, while non-React modules can import the configured instance from `frontend/src/i18n`. Date formatting follows the active i18next language and retains the `Europe/Warsaw` audit timezone.
 
 ## Validation
 
@@ -80,20 +53,9 @@ pnpm lint
 pnpm build
 ```
 
-`DatabaseSmokeTests` performs read-only queries only when `REKRUTACJA_DB` is present. Without that setting it exits successfully, so CI does not require database access.
+## Deployment
 
-## Azure deployment
-
-The repository is arranged for Azure Static Web Apps:
-
-- app location: `frontend`
-- API location: `api`
-- frontend output: `dist`
-- API runtime: `dotnet-isolated:9.0`
-
-Create a Static Web App, configure all four server settings above in its application settings, and store its deployment token in the GitHub repository secret `AZURE_STATIC_WEB_APPS_API_TOKEN`. The workflow in `.github/workflows/azure-static-web-apps.yml` deploys pushes to `main` and can also be started manually.
-
-Keep `COOKIE_SECURE=true` in Azure. Use a read-only SQL login and allow network access only from the required Azure service path. The database setting belongs in Azure application settings, never in a workflow or repository file.
+The app is deployed to Azure Static Web Apps by `.github/workflows/azure-static-web-apps.yml` on every push to `main`. The four server settings above live in the Static Web App's application settings, never in the repository.
 
 ## Audit interpretation decisions
 
@@ -101,17 +63,7 @@ These rules are deliberate because the database does not provide a complete publ
 
 ### Operations and entity labels
 
-Audit operation values are interpreted as:
-
-| Value | Meaning |
-| ---: | --- |
-| 1 | Added |
-| 2 | Deleted |
-| 3 | Modified |
-
-`AuditLog.Type = 0` is currently ignored. It occurs in the source data, but it is not present in the supplied public enum and its meaning is awaiting clarification.
-
-Entity values `0` through `7` use the supplied public enum (`Unknown`, contract header, annex header, annex change, file, invoice, payment schedule, and contract funding). Any other entity code is retained when it can be reliably scoped to the contract and displayed as `Unknown ({number})`; it is never assigned a guessed business label.
+Operations (`1` = Added, `2` = Deleted, `3` = Modified) and entity codes `0`–`7` follow the supplied public enums. `AuditLog.Type = 0` occurs in the source data but is not part of the public enum, so those rows are excluded. Entity codes above `7` are kept when they can be scoped to the contract and shown as `Typ ({number})`.
 
 ### Contract scope
 
@@ -127,73 +79,66 @@ The selector contains active `DocumentHeader` rows where `DocumentType = 1` and 
 - file,
 - note.
 
-Ambiguous shared entities are excluded. For example, a contractor may be referenced by five contracts while its audit row has no contract `ParentId`. Showing that event under every contract would claim a relationship the audit data does not prove, so it is omitted. This favors defensible evidence over an apparently more complete but potentially misleading history.
+Ambiguous shared entities (for example a contractor referenced by several contracts whose audit row is empty) are excluded — rationale in [Decisions and trade-offs](#decisions-and-trade-offs).
 
-The shared access code intentionally exposes contracts from all organizations. `OrganizationId` is therefore visible and searchable in the global contract selector, and it is also enforced when scoping audit rows.
-
-The verified source schema uses SQL `int` for `AuditLog.Id`. `PaymentSchedule`, `ContractFunding`, and `Note` do not expose an `OrganizationId` column, so they are scoped through their proven document/parent relationship; the final audit-row join still requires the selected contract's `OrganizationId`.
-
-For each history request, the repository materializes the related document, invoice, and entity ID sets, followed by the scoped audit rows, into connection-scoped SQL temporary tables. The filtered event rows and the unfiltered highest scoped audit ID are then returned in one batch. This computes the relationship scope once while preserving a version that can detect new data even when the visible history is filtered. The standalone version endpoint uses the same materialized scope for lightweight polling.
-
-The contract selector includes each contract's unfiltered audit-event count, but the count does not delay the contract list. `GET /api/contracts` performs only the inexpensive active-`DocumentHeader` query. The frontend then requests `GET /api/contracts/audit-counts` in the background and merges the results into the already visible selector. Until they arrive, count badges show a neutral loading placeholder; a count failure does not prevent contract selection or history access.
-
-Counts for all active contracts are computed in one set-based query: document and related-entity relationships are materialized once, audit rows are matched by `EntityId`/`ParentId`, and the result is grouped by root contract. This avoids an N+1 history query per contract. The result is cached for five minutes in each running API instance, while the frontend also treats both contract queries as fresh for five minutes and does not repeat them merely because the browser window regains focus. On the inspected database, all 1,005 counts were produced in about 0.9 seconds of query execution and under 2 seconds for the complete repository call including a new connection.
+The shared access code intentionally exposes contracts from all organizations. Therefore, you can see and search contracts by `OrganizationId`.
 
 ### Filtering, ordering, and volume
 
-- Default order is `CreatedDate DESC, Id DESC`; oldest-first uses both keys ascending.
 - The `to` date is inclusive in the Polish calendar. Internally it becomes the exclusive start of the following day in `Europe/Warsaw`.
 - Timestamps are treated as UTC. The UI formats them with `pl-PL` in `Europe/Warsaw`; CSV uses ISO UTC.
-- Search is case-insensitive and covers actor email/UUID, entity UUID, field name and Polish label, old/new value, and event description. Input is limited to 100 characters.
-- Filter edits do not query immediately. `Zastosuj filtry` updates the URL and loads the result; `Wyczyść` removes them.
-- No pagination or arbitrary row limiter is implemented. The inspected database has about 7,700 audit rows globally, while the largest reliably scoped active-contract history is far smaller (160 events). Full contract history is more convenient for checking older changes and remains inexpensive at this scale. Revisit pagination if an individual contract grows to thousands of events or measured response/DOM performance becomes unacceptable.
+- No pagination or row limiter is implemented. The given database has about 7,700 audit rows, the largest active-contract history is far smaller (160 events). Full contract history is more convenient for checking older changes and remains inexpensive at this scale. Revisit pagination if needed in the future.
 
 ### Presentation and raw values
 
-One audit event is grouped with its nested field changes. A read-only scan of the 7,764 source audit rows found 94 distinct top-level field names. The shared Polish catalog in `frontend/src/i18n/pl/auditFieldLabels.json` provides safe labels for 91 of them and entity-specific overrides where the same technical name has a clearer meaning for an annex, file, invoice, or contract-funding record. The frontend uses the catalog through i18next, while the API embeds the same resource so Polish-label search and CSV export stay consistent.
+Changed field labels are in Polish, translations come from the shared catalog in `frontend/src/i18n/pl/auditFieldLabels.json` (91 of the 94 field names observed in the source data), used by both the frontend and the API so Polish-label search and CSV export stay consistent. Fields whose domain meaning is not established (`P4`, `ExcludingAuthority`, `FoundingContractId`) and any newly observed field keep their raw names.
 
-The technical field name remains visible as supporting information whenever it differs from the Polish label. `P4`, `ExcludingAuthority`, and `FoundingContractId` intentionally retain their raw names because their domain meaning is not established well enough to present a trustworthy translation. Any newly observed field also falls back to its raw name automatically; it must be added to the shared catalog only after its meaning is understood. Values themselves are not semantically rewritten. Structured JSON changes use a collapsed summary and an expandable changed-leaf diff, while other long values can be expanded.
-
-Long contract names use visual middle truncation in the selector and sticky history header, while the complete name remains available to assistive technology and as a tooltip. The right-hand header shows the full organization ID. Copying an event's technical data includes the contract name and organization ID alongside the event, entity, and user identifiers.
-
-The stored payloads are snapshots and affected-column hints, not guaranteed minimal diffs. To avoid presenting unchanged snapshot fields as changes, field rows are selected by operation:
+Since payloads in DB are snapshots and affected-column hints, to avoid presenting unchanged snapshot fields as changes, field rows are selected by operation:
 
 - `Added` shows fields whose new value is not null.
 - `Deleted` shows fields whose old value is not null.
 - `Modified` shows fields whose old and new serialized values differ exactly.
 
-The event itself is never discarded just because no meaningful field differences remain. The UI shows a localized “no differences in stored values” message, and CSV retains the event metadata with empty field/value columns. This preserves evidence that the operation was logged without representing null-to-null or identical values as changes.
-
-This rule is grounded in the inspected source data: 13,386 of 40,439 `Added` field rows and 108 of 1,006 `Deleted` field rows were null-to-null snapshot entries. Among 3,764 `Modified` field rows, 229 were null-to-null or identical values; 18 modified events contained no meaningful field difference at all.
+The event itself is never discarded just because no meaningful field differences remain. The UI and CSV retain the mention about the event.
 
 ### CSV contract
 
-CSV exports exactly the active contract, filters, and sort order, with one row per changed field, or one metadata-only row when an event has no meaningful field differences. Files use:
+CSV exports exactly the selected contract respecting UI filters and sort order, with one row per changed field, or one metadata-only row when an event has no meaningful field differences. Files use:
 
 - UTF-8 with BOM,
-- semicolon delimiter,
+- semicolon delimiter, declared to Excel with a leading `sep=;` line so the file opens correctly regardless of the machine's regional list separator,
 - RFC-style quoting for delimiters, quotes, and newlines,
 - ISO UTC timestamps,
 - Polish display labels plus a separate technical field-name column,
 - actor email and UUID,
 - a metadata section describing the contract and active filters.
 
-Cells whose first non-whitespace character is `=`, `+`, `-`, or `@` are prefixed with an apostrophe to prevent spreadsheet formula injection. This means a raw value such as `=1+1` is exported as `'=1+1`; the apostrophe is a safety marker, not source data.
+Cells whose first non-whitespace character is `=`, `+`, `-`, or `@` are prefixed with an apostrophe to prevent spreadsheet formula injection.
 
 ### Session, logout, and stale views
 
-The access endpoint compares codes in constant time and issues an HMAC-signed cookie with `HttpOnly`, `SameSite=Strict`, and (outside local HTTP) `Secure`. The server stores no session state. A logout endpoint expires the cookie; this is important on a shared treasurer workstation. A 401 returns the user to the access screen while preserving the URL, so successful re-entry returns to the selected contract and filters.
+The access endpoint compares codes in constant time and issues an HMAC-signed cookie with `HttpOnly`, `SameSite=Strict`, and (outside local HTTP) `Secure`. The server stores no session state; a logout endpoint expires the cookie, which matters on a shared treasurer workstation. A 401 returns the user to the access screen while preserving the URL. New audit data is signalled with an indicator and never auto-refreshed.
 
-While the selected contract is open and the tab is visible, the UI checks `/audit/version` every 60 seconds. It requests only the highest scoped audit ID. A mismatch shows a “new data” indicator; the table is refreshed only when the user asks, so rows do not move during an inspection.
+## Decisions and trade-offs
 
-## Known production gaps
+Three decisions the task did not require, each justified by value for the treasurer:
 
-- The shared code is intentionally simple authorization, not user identity or per-organization access control. Put the app behind an identity-aware gateway if individual accountability is required.
-- No custom in-process rate limiter is included. The code is expected to be high entropy, comparisons are constant time, and production brute-force protection should be configured at the Azure edge/gateway where it remains effective across instances.
-- Entity codes above 7 and operation type 0 require confirmation from the source-system owner.
-- Ambiguous shared-entity audit events are intentionally absent until the database provides a reliable contract relationship.
-- At much larger per-contract histories, server pagination or row virtualization should be introduced based on measurements.
+**1. Ambiguous events are excluded, never guessed.**
 
-## Security note
+An audit event enters a contract's history only when the data proves the relationship (`EntityId`/`ParentId` plus `OrganizationId` — see [Contract scope](#contract-scope)). A contractor referenced by five contracts whose audit row names no contract is shown under none of them. Likewise unknown entity codes appear as `Typ (N)` and fields such as `P4` keep their raw names instead of an invented translation.
+*Value:* a shorter but defensible list is worth more than an apparently complete one, and it leaves the limited vertical space for events that actually mean something (which I took particular care of).
 
-This application displays sensitive audit information. Do not deploy it with sample credentials, do not commit connection strings, use a read-only database principal, keep HTTPS and secure cookies enabled, rotate any credential that is actually exposed, and sign out after use on a shared device.
+**2. Changes are designed to be read, not decoded.**
+
+Source payloads are state snapshots, not minimal diffs: 13,386 of 40,439 field rows under "Added" were null→null entries, and some "Modified" rows carry identical values on both sides. The noise is filtered per operation (rules in [Presentation and raw values](#presentation-and-raw-values)), but the event itself never disappears. How a modification reads got the same attention: plain values render as a git-style diff (old value struck through next to the new one), while JSON payloads are compared structurally and show only the changed leaves with their paths, instead of two walls of serialized text. Long values expand in place, so the history never requires horizontal scrolling.
+*Value:* a treasurer checking what changed in a contract does not wade through roughly 30% noise, yet never loses the proof that an operation was logged — and spots the actual change at a glance instead of comparing two blobs of text by eye.
+
+**3. CSV export built for hand-off.**
+
+The export opens correctly in Excel without the import wizard regardless of the machine's regional settings, carries a header with the contract name, organization, and active filters, Polish labels next to technical field names, and formula-injection protection (`=1+1` → `'=1+1`); format details in [CSV contract](#csv-contract).
+*Value:* it lets the treasurer share the history with an auditor or accountant. The recipient sees exactly which slice of the history the report covers.
+
+### Consciously left out
+
+- **Pagination and virtualization** — see [Filtering, ordering, and volume](#filtering-ordering-and-volume): at the current data scale full history is more convenient for finding older changes. Pagination returns when measurements show a problem, not sooner.
+- **User identity and in-app rate limiting** — one shared code is deliberately authorization, not identification. Individual accountability and brute-force protection belong at the gateway/edge (where they work across instances), not in MVP code. If individual accountability is required, put the app behind an identity-aware gateway.
