@@ -79,9 +79,9 @@ The selector contains active `DocumentHeader` rows where `DocumentType = 1` and 
 - file,
 - note.
 
-Ambiguous shared entities (for example a contractor referenced by several contracts whose audit row is empty) are excluded — rationale in [Decyzje ponad wymagania](#decyzje-ponad-wymagania).
+Ambiguous shared entities (for example a contractor referenced by several contracts whose audit row is empty) are excluded — rationale in [Decisions and trade-offs](#decisions-and-trade-offs).
 
-The shared access code intentionally exposes contracts from all organizations. Therefore, ou can see and search contract by `OrganizationId`.
+The shared access code intentionally exposes contracts from all organizations. Therefore, you can see and search contracts by `OrganizationId`.
 
 ### Filtering, ordering, and volume
 
@@ -99,7 +99,7 @@ Since payloads in DB are snapshots and affected-column hints, to avoid presentin
 - `Deleted` shows fields whose old value is not null.
 - `Modified` shows fields whose old and new serialized values differ exactly.
 
-The event itself is never discarded just because no meaningful field differences remain. The UI and CSV retain the mention about the event. The rule is grounded in a scan of the source data, where roughly a third of `Added` field rows were null-to-null snapshot entries.
+The event itself is never discarded just because no meaningful field differences remain. The UI and CSV retain the mention about the event.
 
 ### CSV contract
 
@@ -119,32 +119,26 @@ Cells whose first non-whitespace character is `=`, `+`, `-`, or `@` are prefixed
 
 The access endpoint compares codes in constant time and issues an HMAC-signed cookie with `HttpOnly`, `SameSite=Strict`, and (outside local HTTP) `Secure`. The server stores no session state; a logout endpoint expires the cookie, which matters on a shared treasurer workstation. A 401 returns the user to the access screen while preserving the URL. New audit data is signalled with an indicator and never auto-refreshed.
 
-## Known production gaps
+## Decisions and trade-offs
 
-The scope limits — shared-code authorization instead of user identity, no in-app rate limiting, no pagination, and unconfirmed audit codes — are deliberate. Their rationale is described in [Decyzje ponad wymagania](#decyzje-ponad-wymagania) below. If individual accountability is required, put the app behind an identity-aware gateway.
+Three decisions the task did not require, each justified by value for the treasurer:
 
----
+**1. Ambiguous events are excluded, never guessed.**
 
-## Recruitment answers in Polish
+An audit event enters a contract's history only when the data proves the relationship (`EntityId`/`ParentId` plus `OrganizationId` — see [Contract scope](#contract-scope)). A contractor referenced by five contracts whose audit row names no contract is shown under none of them. Likewise unknown entity codes appear as `Typ (N)` and fields such as `P4` keep their raw names instead of an invented translation.
+*Value:* a shorter but defensible list is worth more than an apparently complete one, and it leaves the limited vertical space for events that actually mean something (which I took particular care of).
 
-Trzy decyzje, których zadanie nie wymuszało, każda uzasadniona wartością dla skarbnika:
+**2. Changes are designed to be read, not decoded.**
 
-1. **Niejednoznaczne zdarzenia są wykluczane, a nie zgadywane.**
+Source payloads are state snapshots, not minimal diffs: 13,386 of 40,439 field rows under "Added" were null→null entries, and some "Modified" rows carry identical values on both sides. The noise is filtered per operation (rules in [Presentation and raw values](#presentation-and-raw-values)), but the event itself never disappears. How a modification reads got the same attention: plain values render as a git-style diff (old value struck through next to the new one), while JSON payloads are compared structurally and show only the changed leaves with their paths, instead of two walls of serialized text. Long values expand in place, so the history never requires horizontal scrolling.
+*Value:* a treasurer checking what changed in a contract does not wade through roughly 30% noise, yet never loses the proof that an operation was logged — and spots the actual change at a glance instead of comparing two blobs of text by eye.
 
-Zdarzenie audytowe trafia do historii umowy tylko wtedy, gdy da się je udowodnić relacją w danych (`EntityId`/`ParentId` plus `OrganizationId`). Kontrahent powiązany z pięcioma umowami, którego wiersz audytu nie wskazuje umowy, nie jest pokazywany pod żadną z nich. Analogicznie nieznane kody encji wyświetlają się jako `Typ (N)`, a pola takie jak `P4` zachowują surową nazwę zamiast wymyślonego tłumaczenia.
-*Wartość:* krótsza, ale obronialna lista jest warta więcej niż pozornie kompletna. pozwala zmieścić więcej sensownych zdarzeń w ograniczonej przestrzeni pionowej (o to szczególnie zadbałem).
+**3. CSV export built for hand-off.**
 
-**2. Odsiewanie pozornych zmian — snapshoty null→null nie udają zmian.**
+The export opens correctly in Excel without the import wizard regardless of the machine's regional settings, carries a header with the contract name, organization, and active filters, Polish labels next to technical field names, and formula-injection protection (`=1+1` → `'=1+1`); format details in [CSV contract](#csv-contract).
+*Value:* it lets the treasurer share the history with an auditor or accountant. The recipient sees exactly which slice of the history the report covers.
 
-Źródłowe payloady to zrzuty stanu, nie minimalne diffy. 13 386 z 40 439 wierszy pól przy operacji „Dodano” to wpisy null→null, a część „Zmodyfikowano” ma identyczne wartości po obu stronach. Ten szum jest filtrowany per operacja, ale samo zdarzenie nigdy nie znika.
-*Wartość:* skarbnik weryfikujący, co się zmieniło w umowie, nie przedziera się przez ok. 30% szumu, a jednocześnie nie traci dowodu, że operacja została zarejestrowana.
+### Consciously left out
 
-**3. CSV eksport.**
-
-Eksport otwiera się poprawnie w Excelu bez kreatora importu niezależnie od ustawień regionalnych komputera, zawiera nagłówek z nazwą umowy, organizacją i aktywnymi filtrami, polskie etykiety obok technicznych nazw pól oraz ochronę przed formula injection (`=1+1` → `'=1+1`).
-*Wartość:* pozwala podzielić się hitorią z audytorem lub księgową. Odbiorca pliku widzi, z jakiego wycinka historii pochodzi raport.
-
-### Co świadomie odpuszczono
-
-- **Paginacja i wirtualizacja** — pisałem wyżej. Cała baza ma ok. 7,7 tys. wierszy audytu, największa realna historia umowy to 160 zdarzeń. Pełna historia jest wygodniejsza przy szukaniu starszych zmian; paginacja wróci, gdy pomiary pokażą problem, nie wcześniej.
-- **Tożsamość użytkownika i rate limiting w aplikacji** — jeden współdzielony kod to świadomie autoryzacja, nie identyfikacja. Rozliczalność osobowa i ochrona przed brute-force należą do bramy/edge (gdzie działają między instancjami), a nie do kodu MVP.
+- **Pagination and virtualization** — see [Filtering, ordering, and volume](#filtering-ordering-and-volume): at the current data scale full history is more convenient for finding older changes. Pagination returns when measurements show a problem, not sooner.
+- **User identity and in-app rate limiting** — one shared code is deliberately authorization, not identification. Individual accountability and brute-force protection belong at the gateway/edge (where they work across instances), not in MVP code. If individual accountability is required, put the app behind an identity-aware gateway.
