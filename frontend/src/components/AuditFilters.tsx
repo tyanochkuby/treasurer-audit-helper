@@ -62,14 +62,14 @@ export const AuditFiltersPanel = memo(function AuditFiltersPanel({ filters, unkn
       <div>
         <Label id="operation-label" className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500">{t('filters.operation')}</Label>
         <Select value={draft.operationType} onValueChange={(value) => update('operationType', value ?? '')}>
-          <SelectTrigger aria-labelledby="operation-label" className={input}><SelectValue>{operationLabel}</SelectValue></SelectTrigger>
+          <SelectTrigger size="lg" aria-labelledby="operation-label" className={input}><SelectValue>{operationLabel}</SelectValue></SelectTrigger>
           <SelectContent><SelectItem value="">{t('filters.all')}</SelectItem>{operationOptions.map((option) => <SelectItem key={option.value} value={option.value}>{t(option.key)}</SelectItem>)}</SelectContent>
         </Select>
       </div>
       <div>
         <Label id="entity-label" className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500">{t('filters.entity')}</Label>
         <Select value={draft.entityType} onValueChange={(value) => update('entityType', value ?? '')}>
-          <SelectTrigger aria-labelledby="entity-label" className={input}><SelectValue>{entityLabel}</SelectValue></SelectTrigger>
+          <SelectTrigger size="lg" aria-labelledby="entity-label" className={input}><SelectValue>{entityLabel}</SelectValue></SelectTrigger>
           <SelectContent>
             <SelectItem value="">{t('filters.all')}</SelectItem>
             {entityOptions.map((option) => <SelectItem key={option.value} value={option.value}>{t(option.key)}</SelectItem>)}
