@@ -72,13 +72,7 @@ public sealed class AuditMapper
 
     private static string CreateDescription(string operation, string entityType, IReadOnlyList<AuditChangeDto> changes)
     {
-        var operationLabel = operation switch
-        {
-            "Added" => "Dodano",
-            "Deleted" => "Usunięto",
-            "Modified" => "Zmieniono",
-            _ => "Zarejestrowano operację"
-        };
+        var operationLabel = PolishAuditLabels.OperationLabel(operation) ?? "Zarejestrowano operację";
         var field = changes.Count == 1 && changes[0].FieldDisplayName is not null
             ? $": {changes[0].FieldDisplayName}"
             : string.Empty;
