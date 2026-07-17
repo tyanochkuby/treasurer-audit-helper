@@ -33,6 +33,7 @@ public sealed record AuditHistoryDto(
     Guid ContractId,
     DateTime GeneratedAtUtc,
     string Version,
+    int TotalCount,
     IReadOnlyList<AuditEventDto> Items);
 
 public sealed record AuditVersionDto(string Version);

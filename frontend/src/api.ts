@@ -44,9 +44,11 @@ export const api = {
   logout: () => request<void>('/api/logout', { method: 'POST' }),
   contracts: () => request<Contract[]>('/api/contracts'),
   contractAuditCounts: () => request<ContractAuditCount[]>('/api/contracts/audit-counts'),
-  audit: (contractId: string, filters: AuditFilters) => {
-    const query = buildAuditQuery(filters)
-    return request<AuditHistory>(`/api/contracts/${encodeURIComponent(contractId)}/audit${query ? `?${query}` : ''}`)
+  audit: (contractId: string, filters: AuditFilters, limit?: number) => {
+    const query = new URLSearchParams(buildAuditQuery(filters))
+    if (limit) query.set('limit', String(limit))
+    const suffix = query.toString()
+    return request<AuditHistory>(`/api/contracts/${encodeURIComponent(contractId)}/audit${suffix ? `?${suffix}` : ''}`)
   },
   version: (contractId: string) => request<AuditVersion>(`/api/contracts/${encodeURIComponent(contractId)}/audit/version`),
   export: async (contractId: string, filters: AuditFilters) => {

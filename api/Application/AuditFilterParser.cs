@@ -7,6 +7,8 @@ namespace AuditApi.Application;
 public static class AuditFilterParser
 {
     public const int MaxSearchLength = 100;
+    public const int DefaultPageSize = 200;
+    public const int MaxPageSize = 500;
     private static readonly TimeZoneInfo WarsawTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Warsaw");
 
     public static FilterParseResult Parse(NameValueCollection query)
@@ -61,7 +63,21 @@ public static class AuditFilterParser
             return new(null, "Nieprawidłowy kierunek sortowania.");
         }
 
-        return new(new AuditFilter(operationResult.Operation, entityType, fromResult.Utc, toResult.Utc, search, sort), null);
+        var offset = 0;
+        if (!string.IsNullOrWhiteSpace(query["offset"]) &&
+            (!int.TryParse(query["offset"], out offset) || offset < 0))
+        {
+            return new(null, "Nieprawidłowe przesunięcie stronicowania.");
+        }
+
+        var limit = DefaultPageSize;
+        if (!string.IsNullOrWhiteSpace(query["limit"]) &&
+            (!int.TryParse(query["limit"], out limit) || limit < 1 || limit > MaxPageSize))
+        {
+            return new(null, $"Rozmiar strony musi być liczbą od 1 do {MaxPageSize}.");
+        }
+
+        return new(new AuditFilter(operationResult.Operation, entityType, fromResult.Utc, toResult.Utc, search, sort, offset, limit), null);
     }
 
     private static (AuditOperationType? Operation, string? Error) ParseOperation(string? value)

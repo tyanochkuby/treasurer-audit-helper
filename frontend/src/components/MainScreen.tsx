@@ -29,6 +29,8 @@ function hasFilters(filters: AuditFilters) {
   return Boolean(filters.operationType || filters.entityType || filters.from || filters.to || filters.search)
 }
 
+const PAGE_SIZE = 200
+
 interface Props {
   contracts: Contract[]
   onUnauthorized: () => void
@@ -47,9 +49,12 @@ export function MainScreen({ contracts, onUnauthorized, onLogout }: Props) {
   const filters = useMemo(() => readFilters(params), [params])
   const loadedFormatter = useMemo(() => new Intl.DateTimeFormat(i18n.resolvedLanguage ?? i18n.language, { dateStyle: 'medium', timeStyle: 'medium', timeZone: 'Europe/Warsaw' }), [i18n.language, i18n.resolvedLanguage])
 
+  const [limit, setLimit] = useState(PAGE_SIZE)
+  useEffect(() => setLimit(PAGE_SIZE), [selectedId, filters])
+
   const history = useQuery({
-    queryKey: ['audit', selectedId, filters],
-    queryFn: () => api.audit(selectedId, filters),
+    queryKey: ['audit', selectedId, filters, limit],
+    queryFn: () => api.audit(selectedId, filters, limit),
     enabled: Boolean(selected),
     retry: false,
     refetchOnWindowFocus: false,
@@ -152,11 +157,18 @@ export function MainScreen({ contracts, onUnauthorized, onLogout }: Props) {
             <AuditFiltersPanel filters={filters} unknownEntityTypes={unknownEntityTypes} onApply={applyFilters} />
 
             <div className="mb-3 mt-6 flex flex-wrap items-center justify-between gap-2 text-sm text-slate-500">
-              <span>{history.data ? t('main.eventCount', { count: history.data.items.length }) : t('main.history')}</span>
+              <span>{history.data
+                ? history.data.items.length < history.data.totalCount
+                  ? t('main.eventCountPartial', { count: history.data.items.length, total: history.data.totalCount })
+                  : t('main.eventCount', { count: history.data.items.length })
+                : t('main.history')}</span>
               {history.data && <span>{t('main.loadedAt')} <time dateTime={history.data.generatedAtUtc}>{loadedFormatter.format(new Date(history.data.generatedAtUtc))}</time></span>}
             </div>
 
             {history.isPending ? <LoadingHistory /> : history.isError ? <RequestError onRetry={() => history.refetch()} /> : <AuditTable items={history.data.items} filtered={hasFilters(filters)} contract={selected} />}
+            {history.data && history.data.items.length < history.data.totalCount && <div className="mt-4 text-center">
+              <Button variant="outline" onClick={() => setLimit((value) => value + PAGE_SIZE)} disabled={history.isFetching} className="border-slate-300 bg-white px-5 font-bold text-slate-700 shadow-sm hover:bg-slate-50">{t('main.loadMore')}</Button>
+            </div>}
           </div>
         </>}
       </main>

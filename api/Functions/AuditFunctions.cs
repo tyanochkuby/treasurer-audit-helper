@@ -55,7 +55,8 @@ public sealed class AuditFunctions(
         if (validation.Response is not null) return validation.Response;
 
         var id = validation.ContractId!.Value;
-        var filter = validation.Filter!;
+        // Exports always contain the complete filtered history, never a single page.
+        var filter = validation.Filter! with { Offset = 0, Limit = null };
         var contractTask = service.GetContractAsync(id, context.CancellationToken);
         var historyTask = service.GetHistoryAsync(id, filter, context.CancellationToken);
         await Task.WhenAll(contractTask, historyTask);

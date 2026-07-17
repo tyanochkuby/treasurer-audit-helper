@@ -6,7 +6,9 @@ public sealed record AuditFilter(
     DateTime? FromUtc,
     DateTime? ToExclusiveUtc,
     string? Search,
-    AuditSortDirection SortDirection)
+    AuditSortDirection SortDirection,
+    int Offset = 0,
+    int? Limit = null)
 {
     public static AuditFilter Empty { get; } = new(null, null, null, null, null, AuditSortDirection.Descending);
 

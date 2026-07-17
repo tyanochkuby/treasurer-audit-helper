@@ -29,24 +29,31 @@ public sealed class AuditApplicationService(
         var contract = await repository.GetContractAsync(contractId, cancellationToken)
             ?? throw new ContractNotFoundException(contractId);
 
+        // The repository owns contract scoping, structured filters and paging so
+        // they are applied before rows leave SQL Server. Free-text search operates
+        // on the mapped, human-readable event and therefore remains in the
+        // application — in that mode the full scope is loaded and paged in memory.
+        var searchActive = !string.IsNullOrWhiteSpace(filter.Search);
         var snapshot = await repository.GetAuditSnapshotAsync(
             contractId,
             contract.OrganizationId,
-            filter,
+            searchActive ? filter with { Offset = 0, Limit = null } : filter,
             cancellationToken);
 
-        // The repository owns contract scoping and structured filters so they are
-        // applied before rows leave SQL Server. Free-text search operates on the
-        // mapped, human-readable event and therefore remains in the application.
-        var events = snapshot.Rows
-            .Select(mapper.Map)
-            .Where(item => MatchesSearch(item, filter.Search))
-            .ToList();
+        var events = snapshot.Rows.Select(mapper.Map).ToList();
+        var totalCount = snapshot.TotalCount;
+        if (searchActive)
+        {
+            var matches = events.Where(item => MatchesSearch(item, filter.Search)).ToList();
+            totalCount = matches.Count;
+            events = matches.Skip(filter.Offset).Take(filter.Limit ?? matches.Count).ToList();
+        }
 
         return new AuditHistoryDto(
             contractId,
             timeProvider.GetUtcNow().UtcDateTime,
             snapshot.Version.ToString(),
+            totalCount,
             events);
     }
 

@@ -55,6 +55,8 @@ export const pl = {
     eventCount_few: '{{count}} zdarzenia',
     eventCount_many: '{{count}} zdarzeń',
     eventCount_other: '{{count}} zdarzenia',
+    eventCountPartial: 'Wyświetlono {{count}} z {{total}} zdarzeń',
+    loadMore: 'Pokaż więcej',
     history: 'Historia zmian',
     loadedAt: 'Dane pobrano:',
     noSelectionTitle: 'Wybierz umowę',

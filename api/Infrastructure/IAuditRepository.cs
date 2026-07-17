@@ -22,7 +22,7 @@ public sealed record AuditLogRecord(
     Guid? EntityId,
     Guid? ParentId);
 
-public sealed record AuditSnapshot(IReadOnlyList<AuditLogRecord> Rows, int Version);
+public sealed record AuditSnapshot(IReadOnlyList<AuditLogRecord> Rows, int TotalCount, int Version);
 
 public interface IAuditRepository
 {

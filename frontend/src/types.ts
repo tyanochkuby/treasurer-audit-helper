@@ -35,6 +35,7 @@ export interface AuditHistory {
   contractId: string
   generatedAtUtc: string
   version: string
+  totalCount: number
   items: AuditEvent[]
 }
 
