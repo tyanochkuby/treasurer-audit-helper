@@ -7,7 +7,9 @@ public static class RequestAuthentication
 {
     public static bool IsAuthenticated(HttpRequestData request, AccessSessionService sessions)
     {
-        request.Headers.TryGetValues("Cookie", out var values);
-        return sessions.IsAuthenticated(values?.FirstOrDefault());
+        var token = request.Cookies
+            .FirstOrDefault(cookie => cookie.Name.Equals(AccessSessionService.CookieName, StringComparison.Ordinal))?
+            .Value;
+        return sessions.IsAuthenticated(token);
     }
 }

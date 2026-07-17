@@ -30,9 +30,8 @@ public sealed class AccessSessionService(AppSettings settings, TimeProvider time
         return true;
     }
 
-    public bool IsAuthenticated(string? cookieHeader)
+    public bool IsAuthenticated(string? token)
     {
-        var token = ReadCookie(cookieHeader, CookieName);
         if (string.IsNullOrWhiteSpace(token))
         {
             return false;
@@ -83,25 +82,6 @@ public sealed class AccessSessionService(AppSettings settings, TimeProvider time
     {
         using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(settings.SessionSigningKey));
         return Base64UrlEncode(hmac.ComputeHash(Encoding.ASCII.GetBytes(payload)));
-    }
-
-    private static string? ReadCookie(string? header, string name)
-    {
-        if (string.IsNullOrWhiteSpace(header))
-        {
-            return null;
-        }
-
-        foreach (var part in header.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-        {
-            var separator = part.IndexOf('=');
-            if (separator > 0 && part[..separator].Equals(name, StringComparison.Ordinal))
-            {
-                return part[(separator + 1)..];
-            }
-        }
-
-        return null;
     }
 
     private static string Base64UrlEncode(byte[] bytes) =>
