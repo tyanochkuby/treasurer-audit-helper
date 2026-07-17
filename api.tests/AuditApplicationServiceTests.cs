@@ -10,22 +10,6 @@ public sealed class AuditApplicationServiceTests
     private readonly Guid _organizationId = Guid.NewGuid();
 
     [Fact]
-    public async Task Search_results_are_paged_in_the_application_layer()
-    {
-        var repository = CreateRepository();
-        repository.AuditRows.Add(CreateRow(_contractId, 10, 1, 5, null, "{\"Number\":\"FV/1\"}"));
-        repository.AuditRows.Add(CreateRow(_contractId, 11, 1, 5, null, "{\"Number\":\"FV/2\"}"));
-        repository.AuditRows.Add(CreateRow(_contractId, 12, 1, 5, null, "{\"Number\":\"FV/3\"}"));
-        var service = CreateService(repository);
-        var filter = AuditFilter.Empty with { Search = "FV/", Offset = 2, Limit = 2 };
-
-        var history = await service.GetHistoryAsync(_contractId, filter, CancellationToken.None);
-
-        Assert.Equal(3, history.TotalCount);
-        Assert.Equal("12", Assert.Single(history.Items).Id);
-    }
-
-    [Fact]
     public async Task Event_without_a_meaningful_difference_is_preserved_with_no_change_rows()
     {
         var repository = CreateRepository();

@@ -49,7 +49,6 @@ public sealed class SqlAuditRepository(ISqlConnectionFactory connectionFactory) 
         CancellationToken cancellationToken)
     {
         var order = filter.SortDirection == AuditSortDirection.Ascending ? "ASC" : "DESC";
-        var paging = filter.Limit is null ? string.Empty : " OFFSET @Offset ROWS FETCH NEXT @Limit ROWS ONLY";
         var sql = SqlQueries.MaterializeAuditScope + $$"""
             SELECT @ContractId AS RootContractId, Id, OrganizationId, UserId, UserEmail, Type, EntityType,
                    CreatedDate, OldValues, NewValues, AffectedColumns, PrimaryKey, EntityId, ParentId
@@ -58,14 +57,7 @@ public sealed class SqlAuditRepository(ISqlConnectionFactory connectionFactory) 
               AND (@EntityType IS NULL OR EntityType = @EntityType)
               AND (@FromUtc IS NULL OR CreatedDate >= @FromUtc)
               AND (@ToExclusiveUtc IS NULL OR CreatedDate < @ToExclusiveUtc)
-            ORDER BY CreatedDate {{order}}, Id {{order}}{{paging}};
-
-            SELECT COUNT(*)
-            FROM #ScopedAudit
-            WHERE (@OperationType IS NULL OR Type = @OperationType)
-              AND (@EntityType IS NULL OR EntityType = @EntityType)
-              AND (@FromUtc IS NULL OR CreatedDate >= @FromUtc)
-              AND (@ToExclusiveUtc IS NULL OR CreatedDate < @ToExclusiveUtc);
+            ORDER BY CreatedDate {{order}}, Id {{order}};
 
             SELECT COALESCE(MAX(Id), 0) FROM #ScopedAudit;
             """;
@@ -77,18 +69,15 @@ public sealed class SqlAuditRepository(ISqlConnectionFactory connectionFactory) 
             OperationType = filter.OperationType is null ? null : (int?)filter.OperationType,
             filter.EntityType,
             filter.FromUtc,
-            filter.ToExclusiveUtc,
-            filter.Offset,
-            filter.Limit
+            filter.ToExclusiveUtc
         };
 
         await using var connection = connectionFactory.Create();
         using var results = await connection.QueryMultipleAsync(
             new CommandDefinition(sql, parameters, cancellationToken: cancellationToken, commandTimeout: 30));
         var rows = (await results.ReadAsync<AuditLogRecord>()).AsList();
-        var totalCount = await results.ReadSingleAsync<int>();
         var version = await results.ReadSingleAsync<int>();
-        return new(rows, totalCount, version);
+        return new(rows, version);
     }
 
     public async Task<int> GetVersionAsync(Guid contractId, Guid organizationId, CancellationToken cancellationToken)

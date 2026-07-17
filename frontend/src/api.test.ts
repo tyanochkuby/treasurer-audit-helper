@@ -8,11 +8,11 @@ describe('audit API URL state', () => {
   afterEach(() => vi.unstubAllGlobals())
 
   it('sends all selected filters to the history endpoint', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ contractId: 'abc', generatedAtUtc: '2026-07-14T10:00:00Z', version: 1, totalCount: 0, items: [] }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ contractId: 'abc', generatedAtUtc: '2026-07-14T10:00:00Z', version: 1, items: [] }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
     vi.stubGlobal('fetch', fetchMock)
-    await api.audit('abc', filters, 200)
+    await api.audit('abc', filters)
     const url = fetchMock.mock.calls[0][0] as string
-    expect(url).toBe(`/api/contracts/abc/audit?${buildAuditQuery(filters)}&limit=200`)
+    expect(url).toBe(`/api/contracts/abc/audit?${buildAuditQuery(filters)}`)
     expect(url).toContain('operationType=Modified')
     expect(url).toContain('search=warto%C5%9B%C4%87')
   })

@@ -25,7 +25,7 @@ internal sealed class FakeAuditRepository : IAuditRepository
         Guid organizationId,
         AuditFilter filter,
         CancellationToken cancellationToken) =>
-        Task.FromResult(new AuditSnapshot(AuditRows, AuditRows.Count, Version));
+        Task.FromResult(new AuditSnapshot(AuditRows, Version));
 
     public Task<int> GetVersionAsync(Guid contractId, Guid organizationId, CancellationToken cancellationToken) =>
         Task.FromResult(Version);
