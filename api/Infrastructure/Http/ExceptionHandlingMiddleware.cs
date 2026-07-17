@@ -22,9 +22,9 @@ public sealed class ExceptionHandlingMiddleware(ILogger<ExceptionHandlingMiddlew
         {
             throw;
         }
-        catch (Exception)
+        catch (Exception exception)
         {
-            logger.LogError("Function {FunctionName} failed. Details were suppressed to protect server data.", context.FunctionDefinition.Name);
+            logger.LogError(exception, "Function {FunctionName} failed.", context.FunctionDefinition.Name);
             await WriteErrorAsync(context, HttpStatusCode.InternalServerError, "Nie udało się wykonać operacji. Spróbuj ponownie później.");
         }
     }
