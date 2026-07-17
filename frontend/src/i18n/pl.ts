@@ -16,11 +16,7 @@ export const pl = {
   access: {
     heroEyebrow: 'Przygotuj dane do kontroli',
     heroTitle: 'Historia zmian umów w jednym miejscu',
-    heroDescription: 'Znajdź, przejrzyj i wyeksportuj pełną historię zmian wybranej umowy.',
-    auditAccess: 'Dostęp do danych audytowych',
-    secureAccess: 'Bezpieczny dostęp',
     title: 'Wprowadź kod dostępu',
-    description: 'Kod otrzymasz od administratora systemu.',
     codeLabel: 'Kod dostępu',
     invalidCode: 'Nieprawidłowy kod dostępu.',
     signInError: 'Nie udało się zalogować. Spróbuj ponownie później.',
@@ -37,7 +33,11 @@ export const pl = {
     searchPlaceholder: 'Numer, temat, ID organizacji…',
     empty: 'Brak umów pasujących do wyszukiwania.',
     organization: 'Organizacja: {{id}}',
-    activeOnly: 'Wyświetlane są aktywne umowy.',
+    auditEventCount_one: '{{count}} zdarzenie',
+    auditEventCount_few: '{{count}} zdarzenia',
+    auditEventCount_many: '{{count}} zdarzeń',
+    auditEventCount_other: '{{count}} zdarzenia',
+    auditEventCountLoading: 'Ładowanie liczby zdarzeń',
   },
   main: {
     logout: 'Wyloguj',
@@ -98,6 +98,7 @@ export const pl = {
   auditFieldLabels,
   table: {
     showAll: 'Pokaż całość',
+    hideAll: 'Zwiń',
     noFilteredResults: 'Brak wyników dla wybranych filtrów',
     noHistory: 'Brak historii zmian',
     noFilteredResultsDescription: 'Zmień lub wyczyść filtry, aby zobaczyć inne wpisy.',

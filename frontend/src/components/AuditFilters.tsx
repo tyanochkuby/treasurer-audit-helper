@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { memo, useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { AuditFilters } from '../types'
@@ -21,7 +21,7 @@ const entityOptions = [
   { value: '7', key: 'entities.ContractFundingEntity' },
 ] as const
 
-export function AuditFiltersPanel({ filters, unknownEntityTypes, onApply }: { filters: AuditFilters; unknownEntityTypes: number[]; onApply: (filters: AuditFilters) => void }) {
+export const AuditFiltersPanel = memo(function AuditFiltersPanel({ filters, unknownEntityTypes, onApply }: { filters: AuditFilters; unknownEntityTypes: number[]; onApply: (filters: AuditFilters) => void }) {
   const { t } = useTranslation()
   const [draft, setDraft] = useState(filters)
   useEffect(() => setDraft(filters), [filters])
@@ -62,14 +62,14 @@ export function AuditFiltersPanel({ filters, unknownEntityTypes, onApply }: { fi
       <div>
         <Label id="operation-label" className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500">{t('filters.operation')}</Label>
         <Select value={draft.operationType} onValueChange={(value) => update('operationType', value ?? '')}>
-          <SelectTrigger aria-labelledby="operation-label" className={input}><SelectValue>{operationLabel}</SelectValue></SelectTrigger>
+          <SelectTrigger size="lg" aria-labelledby="operation-label" className={input}><SelectValue>{operationLabel}</SelectValue></SelectTrigger>
           <SelectContent><SelectItem value="">{t('filters.all')}</SelectItem>{operationOptions.map((option) => <SelectItem key={option.value} value={option.value}>{t(option.key)}</SelectItem>)}</SelectContent>
         </Select>
       </div>
       <div>
         <Label id="entity-label" className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500">{t('filters.entity')}</Label>
         <Select value={draft.entityType} onValueChange={(value) => update('entityType', value ?? '')}>
-          <SelectTrigger aria-labelledby="entity-label" className={input}><SelectValue>{entityLabel}</SelectValue></SelectTrigger>
+          <SelectTrigger size="lg" aria-labelledby="entity-label" className={input}><SelectValue>{entityLabel}</SelectValue></SelectTrigger>
           <SelectContent>
             <SelectItem value="">{t('filters.all')}</SelectItem>
             {entityOptions.map((option) => <SelectItem key={option.value} value={option.value}>{t(option.key)}</SelectItem>)}
@@ -80,18 +80,18 @@ export function AuditFiltersPanel({ filters, unknownEntityTypes, onApply }: { fi
       <Label className="block"><span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500">{t('filters.from')}</span><Input type="date" value={draft.from} onChange={(event) => update('from', event.target.value)} className={input} /></Label>
       <Label className="block"><span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500">{t('filters.to')}</span><Input type="date" value={draft.to} onChange={(event) => update('to', event.target.value)} className={input} /></Label>
     </div>
-    <div className="flex flex-wrap items-end justify-between gap-3 border-t border-slate-100 bg-slate-50/70 px-4 py-3">
-      <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
+    <div className="grid gap-3 border-t border-slate-100 bg-slate-50/70 px-4 py-3 sm:flex sm:items-end sm:justify-between">
+      <div className="flex min-w-0 items-center gap-2 text-sm font-medium text-slate-600">
         <Label id="sort-label">{t('filters.sort')}</Label>
         <Select value={draft.sort} onValueChange={(value) => update('sort', value as AuditFilters['sort'])}>
-          <SelectTrigger aria-labelledby="sort-label" className="h-9 border-slate-300 bg-white px-2.5 text-sm text-slate-700"><SelectValue>{draft.sort === 'desc' ? t('filters.newestFirst') : t('filters.oldestFirst')}</SelectValue></SelectTrigger>
+          <SelectTrigger aria-labelledby="sort-label" className="h-9 min-w-0 flex-1 border-slate-300 bg-white px-2.5 text-sm text-slate-700 sm:flex-none"><SelectValue>{draft.sort === 'desc' ? t('filters.newestFirst') : t('filters.oldestFirst')}</SelectValue></SelectTrigger>
           <SelectContent><SelectItem value="desc">{t('filters.newestFirst')}</SelectItem><SelectItem value="asc">{t('filters.oldestFirst')}</SelectItem></SelectContent>
         </Select>
       </div>
-      <div className="flex gap-2">
-        <Button type="button" variant="ghost" onClick={clear} className="h-9 px-3 font-bold text-slate-600 hover:bg-slate-200">{t('filters.clear')}</Button>
-        <Button type="submit" className="h-9 bg-brand-blue px-4 font-bold text-white hover:bg-brand-blue-dark">{t('filters.apply')}</Button>
+      <div className="grid grid-cols-2 gap-2 sm:flex">
+        <Button type="button" variant="ghost" onClick={clear} className="h-9 w-full px-3 font-bold text-slate-600 hover:bg-slate-200 sm:w-auto">{t('filters.clear')}</Button>
+        <Button type="submit" className="h-9 w-full bg-brand-blue px-4 font-bold text-white hover:bg-brand-blue-dark sm:w-auto">{t('filters.apply')}</Button>
       </div>
     </div>
   </form>
-}
+})

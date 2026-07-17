@@ -135,6 +135,10 @@ The verified source schema uses SQL `int` for `AuditLog.Id`. `PaymentSchedule`, 
 
 For each history request, the repository materializes the related document, invoice, and entity ID sets, followed by the scoped audit rows, into connection-scoped SQL temporary tables. The filtered event rows and the unfiltered highest scoped audit ID are then returned in one batch. This computes the relationship scope once while preserving a version that can detect new data even when the visible history is filtered. The standalone version endpoint uses the same materialized scope for lightweight polling.
 
+The contract selector includes each contract's unfiltered audit-event count, but the count does not delay the contract list. `GET /api/contracts` performs only the inexpensive active-`DocumentHeader` query. The frontend then requests `GET /api/contracts/audit-counts` in the background and merges the results into the already visible selector. Until they arrive, count badges show a neutral loading placeholder; a count failure does not prevent contract selection or history access.
+
+Counts for all active contracts are computed in one set-based query: document and related-entity relationships are materialized once, audit rows are matched by `EntityId`/`ParentId`, and the result is grouped by root contract. This avoids an N+1 history query per contract. The result is cached for five minutes in each running API instance, while the frontend also treats both contract queries as fresh for five minutes and does not repeat them merely because the browser window regains focus. On the inspected database, all 1,005 counts were produced in about 0.9 seconds of query execution and under 2 seconds for the complete repository call including a new connection.
+
 ### Filtering, ordering, and volume
 
 - Default order is `CreatedDate DESC, Id DESC`; oldest-first uses both keys ascending.
@@ -142,13 +146,15 @@ For each history request, the repository materializes the related document, invo
 - Timestamps are treated as UTC. The UI formats them with `pl-PL` in `Europe/Warsaw`; CSV uses ISO UTC.
 - Search is case-insensitive and covers actor email/UUID, entity UUID, field name and Polish label, old/new value, and event description. Input is limited to 100 characters.
 - Filter edits do not query immediately. `Zastosuj filtry` updates the URL and loads the result; `Wyczyść` removes them.
-- No pagination or arbitrary row limiter is implemented. The inspected database has about 7,000 audit rows globally, while the largest reliably scoped contract history is far smaller (about 150 events). Full contract history is more convenient for checking older changes and remains inexpensive at this scale. Revisit pagination if an individual contract grows to thousands of events or measured response/DOM performance becomes unacceptable.
+- No pagination or arbitrary row limiter is implemented. The inspected database has about 7,700 audit rows globally, while the largest reliably scoped active-contract history is far smaller (160 events). Full contract history is more convenient for checking older changes and remains inexpensive at this scale. Revisit pagination if an individual contract grows to thousands of events or measured response/DOM performance becomes unacceptable.
 
 ### Presentation and raw values
 
 One audit event is grouped with its nested field changes. A read-only scan of the 7,764 source audit rows found 94 distinct top-level field names. The shared Polish catalog in `frontend/src/i18n/pl/auditFieldLabels.json` provides safe labels for 91 of them and entity-specific overrides where the same technical name has a clearer meaning for an annex, file, invoice, or contract-funding record. The frontend uses the catalog through i18next, while the API embeds the same resource so Polish-label search and CSV export stay consistent.
 
 The technical field name remains visible as supporting information whenever it differs from the Polish label. `P4`, `ExcludingAuthority`, and `FoundingContractId` intentionally retain their raw names because their domain meaning is not established well enough to present a trustworthy translation. Any newly observed field also falls back to its raw name automatically; it must be added to the shared catalog only after its meaning is understood. Values themselves are not semantically rewritten. Structured JSON changes use a collapsed summary and an expandable changed-leaf diff, while other long values can be expanded.
+
+Long contract names use visual middle truncation in the selector and sticky history header, while the complete name remains available to assistive technology and as a tooltip. The right-hand header shows the full organization ID. Copying an event's technical data includes the contract name and organization ID alongside the event, entity, and user identifiers.
 
 The stored payloads are snapshots and affected-column hints, not guaranteed minimal diffs. To avoid presenting unchanged snapshot fields as changes, field rows are selected by operation:
 

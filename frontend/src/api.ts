@@ -1,4 +1,4 @@
-import type { AuditFilters, AuditHistory, AuditVersion, Contract } from './types'
+import type { AuditFilters, AuditHistory, AuditVersion, Contract, ContractAuditCount } from './types'
 import i18n from './i18n'
 
 export class ApiError extends Error {
@@ -43,6 +43,7 @@ export const api = {
   access: (code: string) => request<void>('/api/access', { method: 'POST', body: JSON.stringify({ code }) }),
   logout: () => request<void>('/api/logout', { method: 'POST' }),
   contracts: () => request<Contract[]>('/api/contracts'),
+  contractAuditCounts: () => request<ContractAuditCount[]>('/api/contracts/audit-counts'),
   audit: (contractId: string, filters: AuditFilters) => {
     const query = buildAuditQuery(filters)
     return request<AuditHistory>(`/api/contracts/${encodeURIComponent(contractId)}/audit${query ? `?${query}` : ''}`)

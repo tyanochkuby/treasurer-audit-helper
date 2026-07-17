@@ -8,6 +8,7 @@ const contract: Contract = {
   id: '1ecce627-d19b-4a73-b3e3-466b39bb3e25',
   organizationId: 'e1cd1118-9795-4937-8e94-1822cae3e78f',
   displayName: 'UM123456 — Testowy przedmiot umowy',
+  auditEventCount: 12,
 }
 
 describe('ContractSidebar', () => {
@@ -38,12 +39,14 @@ describe('ContractSidebar', () => {
     expect(scrollRegion).toHaveClass('overflow-x-hidden', 'overflow-y-auto')
     expect(scrollRegion).not.toContainElement(search)
     expect(search.closest('.shrink-0')).not.toBeNull()
+    expect(scrollRegion).toHaveClass('[contain:layout_paint]')
+    expect(container.querySelector('li')).toHaveClass('[content-visibility:auto]')
   })
 
-  it('places logout in the sidebar header instead of showing a document count', () => {
+  it('shows the audit event count instead of a repeated document icon', () => {
     render(<ContractSidebar contracts={[contract]} selectedId="" open onClose={vi.fn()} onSelect={vi.fn()} onLogout={vi.fn()} />)
 
     expect(screen.getByRole('button', { name: 'Wyloguj' })).toBeInTheDocument()
-    expect(screen.queryByText('1')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('12 zdarzeń')).toHaveTextContent('12')
   })
 })
