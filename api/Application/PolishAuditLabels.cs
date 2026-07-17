@@ -1,6 +1,5 @@
 namespace AuditApi.Application;
 
-/// <summary>Single source of the Polish labels shared by descriptions and the CSV export.</summary>
 internal static class PolishAuditLabels
 {
     public static string? OperationLabel(string operation) => operation switch

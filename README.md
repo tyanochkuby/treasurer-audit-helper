@@ -63,7 +63,7 @@ These rules are deliberate because the database does not provide a complete publ
 
 ### Operations and entity labels
 
-Operations (`1` = Added, `2` = Deleted, `3` = Modified) and entity codes `0`–`7` follow the supplied public enums. `AuditLog.Type = 0` occurs in the source data but is not part of the public enum, so those rows are excluded. Entity codes above `7` are kept when they can be scoped to the contract and shown as `Typ ({number})`.
+Operations (`1` = Added, `2` = Deleted, `3` = Modified) and entity codes `0`–`7` follow the supplied public enums. All (195) observed `AuditLog.Type = 0` rows have no old values, new values, or affected columns; entity codes above `7` are kept when they can be scoped to the contract and are shown as `Typ ({number})`.
 
 ### Contract scope
 
