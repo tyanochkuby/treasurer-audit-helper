@@ -16,12 +16,6 @@ public sealed class AccessFunctions(AccessSessionService sessions)
         FunctionContext context)
     {
         var cancellationToken = context.CancellationToken;
-        if (request.Headers.TryGetValues("Content-Length", out var contentLengths) &&
-            long.TryParse(contentLengths.FirstOrDefault(), out var contentLength) && contentLength > 1024)
-        {
-            return await HttpResponses.ErrorAsync(request, HttpStatusCode.BadRequest, "Nieprawidłowe żądanie.", cancellationToken);
-        }
-
         AccessRequest? payload;
         try
         {
