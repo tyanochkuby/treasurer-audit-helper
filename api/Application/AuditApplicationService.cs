@@ -52,7 +52,7 @@ public sealed class AuditApplicationService(
         return new AuditHistoryDto(
             contractId,
             timeProvider.GetUtcNow().UtcDateTime,
-            snapshot.Version.ToString(),
+            snapshot.Version,
             totalCount,
             events);
     }
@@ -62,7 +62,7 @@ public sealed class AuditApplicationService(
         var contract = await repository.GetContractAsync(contractId, cancellationToken)
             ?? throw new ContractNotFoundException(contractId);
         var version = await repository.GetVersionAsync(contractId, contract.OrganizationId, cancellationToken);
-        return new(version.ToString());
+        return new(version);
     }
 
     private static ContractDto ToDto(ContractRecord contract)

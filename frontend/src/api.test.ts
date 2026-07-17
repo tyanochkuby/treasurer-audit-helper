@@ -8,7 +8,7 @@ describe('audit API URL state', () => {
   afterEach(() => vi.unstubAllGlobals())
 
   it('sends all selected filters to the history endpoint', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ contractId: 'abc', generatedAtUtc: '2026-07-14T10:00:00Z', version: '1', totalCount: 0, items: [] }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ contractId: 'abc', generatedAtUtc: '2026-07-14T10:00:00Z', version: 1, totalCount: 0, items: [] }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
     vi.stubGlobal('fetch', fetchMock)
     await api.audit('abc', filters, 200)
     const url = fetchMock.mock.calls[0][0] as string

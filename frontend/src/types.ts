@@ -34,12 +34,12 @@ export interface AuditEvent {
 export interface AuditHistory {
   contractId: string
   generatedAtUtc: string
-  version: string
+  version: number
   totalCount: number
   items: AuditEvent[]
 }
 
-export interface AuditVersion { version: string }
+export interface AuditVersion { version: number }
 
 export interface AuditFilters {
   operationType: string
