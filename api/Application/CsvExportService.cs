@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using AuditApi.Domain;
 using AuditApi.Models;
@@ -67,6 +68,16 @@ public sealed class CsvExportService
         }
         if (firstNonWhitespace >= 0 && value[firstNonWhitespace] is '=' or '+' or '-' or '@')
         {
+            // A plain negative number is data, not a formula; left it numeric for Excel.
+            if (value[firstNonWhitespace] == '-' && decimal.TryParse(
+                    value.AsSpan(firstNonWhitespace),
+                    NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint,
+                    CultureInfo.InvariantCulture,
+                    out _))
+            {
+                return value;
+            }
+
             return value.Insert(firstNonWhitespace, "'");
         }
 
@@ -115,24 +126,7 @@ public sealed class CsvExportService
         return string.Join(", ", filters);
     }
 
-    private static string OperationLabel(string operation) => operation switch
-    {
-        "Added" => "Dodano",
-        "Deleted" => "Usunięto",
-        "Modified" => "Zmodyfikowano",
-        _ => operation
-    };
+    private static string OperationLabel(string operation) => PolishAuditLabels.OperationLabel(operation) ?? operation;
 
-    private static string EntityLabel(string entity) => entity switch
-    {
-        "Unknown" => "Nieznana",
-        "ContractHeaderEntity" => "Umowa",
-        "AnnexHeaderEntity" => "Aneks",
-        "AnnexChangeEntity" => "Zmiana aneksu",
-        "FileEntity" => "Plik",
-        "InvoiceEntity" => "Faktura",
-        "PaymentScheduleEntity" => "Harmonogram płatności",
-        "ContractFundingEntity" => "Finansowanie umowy",
-        _ => entity
-    };
+    private static string EntityLabel(string entity) => PolishAuditLabels.EntityLabel(entity);
 }

@@ -32,10 +32,10 @@ public sealed record AuditEventDto(
 public sealed record AuditHistoryDto(
     Guid ContractId,
     DateTime GeneratedAtUtc,
-    string Version,
+    int Version,
     IReadOnlyList<AuditEventDto> Items);
 
-public sealed record AuditVersionDto(string Version);
+public sealed record AuditVersionDto(int Version);
 
 public sealed record CsvExport(byte[] Content, string FileName);
 

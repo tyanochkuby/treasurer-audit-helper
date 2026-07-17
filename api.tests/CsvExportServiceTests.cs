@@ -10,7 +10,10 @@ public sealed class CsvExportServiceTests
     [Theory]
     [InlineData("=SUM(A1:A2)", "'=SUM(A1:A2)")]
     [InlineData("+cmd", "'+cmd")]
-    [InlineData("-100", "'-100")]
+    [InlineData("-100", "-100")]
+    [InlineData("-100.50", "-100.50")]
+    [InlineData("-1+1", "'-1+1")]
+    [InlineData("-cmd", "'-cmd")]
     [InlineData("@value", "'@value")]
     [InlineData("  =value", "  '=value")]
     [InlineData("safe", "safe")]
@@ -26,7 +29,7 @@ public sealed class CsvExportServiceTests
             "1", contract.Id, new DateTime(2026, 7, 14, 8, 0, 0, DateTimeKind.Utc),
             "żaneta@example.pl", Guid.NewGuid(), "Modified", 1, "ContractHeaderEntity", Guid.NewGuid(),
             "Zmieniono komentarz", [change]);
-        var history = new AuditHistoryDto(contract.Id, new DateTime(2026, 7, 14, 10, 0, 0, DateTimeKind.Utc), "1", [item]);
+        var history = new AuditHistoryDto(contract.Id, new DateTime(2026, 7, 14, 10, 0, 0, DateTimeKind.Utc), 1, [item]);
 
         var export = new CsvExportService().Create(contract, history, AuditFilter.Empty);
         var text = Encoding.UTF8.GetString(export.Content);
@@ -46,7 +49,7 @@ public sealed class CsvExportServiceTests
         var history = new AuditHistoryDto(
             contract.Id,
             new DateTime(2026, 7, 15, 10, 0, 0, DateTimeKind.Utc),
-            "0",
+            0,
             []);
         var filter = new AuditFilter(
             null,
@@ -70,7 +73,7 @@ public sealed class CsvExportServiceTests
             "42", contract.Id, new DateTime(2026, 7, 14, 8, 0, 0, DateTimeKind.Utc),
             "anna@example.pl", Guid.NewGuid(), "Modified", 1, "ContractHeaderEntity", Guid.NewGuid(),
             "Zmieniono ContractHeaderEntity", []);
-        var history = new AuditHistoryDto(contract.Id, DateTime.UtcNow, "42", [item]);
+        var history = new AuditHistoryDto(contract.Id, DateTime.UtcNow, 42, [item]);
 
         var export = new CsvExportService().Create(contract, history, AuditFilter.Empty);
         var eventLine = Assert.Single(

@@ -82,7 +82,16 @@ public sealed class SqlAuditRepository(ISqlConnectionFactory connectionFactory) 
 
     public async Task<int> GetVersionAsync(Guid contractId, Guid organizationId, CancellationToken cancellationToken)
     {
-        var sql = SqlQueries.MaterializeAuditScope + "SELECT COALESCE(MAX(Id), 0) FROM #ScopedAudit;";
+        // build only the related entity id set
+        var sql = SqlQueries.MaterializeRelatedEntityIds + """
+
+            SELECT COALESCE(MAX(a.Id), 0)
+            FROM dbo.AuditLog a
+            WHERE a.OrganizationId = @OrganizationId
+              AND a.Type IN (1, 2, 3)
+              AND (a.EntityId IN (SELECT Id FROM #RelatedEntityIds)
+                   OR a.ParentId IN (SELECT Id FROM #RelatedEntityIds));
+            """;
         await using var connection = connectionFactory.Create();
         return await connection.ExecuteScalarAsync<int>(new CommandDefinition(
             sql,

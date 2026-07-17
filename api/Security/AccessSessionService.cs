@@ -24,16 +24,14 @@ public sealed class AccessSessionService(AppSettings settings, TimeProvider time
         }
 
         var expiresAt = timeProvider.GetUtcNow().Add(settings.SessionLifetime).ToUnixTimeSeconds();
-        var nonce = Convert.ToHexString(RandomNumberGenerator.GetBytes(16));
-        var payload = Base64UrlEncode(Encoding.UTF8.GetBytes($"1|{expiresAt}|{nonce}"));
+        var payload = Base64UrlEncode(Encoding.UTF8.GetBytes($"1|{expiresAt}"));
         var signature = Sign(payload);
         token = $"{payload}.{signature}";
         return true;
     }
 
-    public bool IsAuthenticated(string? cookieHeader)
+    public bool IsAuthenticated(string? token)
     {
-        var token = ReadCookie(cookieHeader, CookieName);
         if (string.IsNullOrWhiteSpace(token))
         {
             return false;
@@ -56,8 +54,8 @@ public sealed class AccessSessionService(AppSettings settings, TimeProvider time
 
         try
         {
-            var payload = Encoding.UTF8.GetString(Base64UrlDecode(parts[0])).Split('|', 3);
-            return payload.Length == 3 &&
+            var payload = Encoding.UTF8.GetString(Base64UrlDecode(parts[0])).Split('|', 2);
+            return payload.Length == 2 &&
                    payload[0] == "1" &&
                    long.TryParse(payload[1], out var expiresAt) &&
                    timeProvider.GetUtcNow().ToUnixTimeSeconds() < expiresAt;
@@ -84,25 +82,6 @@ public sealed class AccessSessionService(AppSettings settings, TimeProvider time
     {
         using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(settings.SessionSigningKey));
         return Base64UrlEncode(hmac.ComputeHash(Encoding.ASCII.GetBytes(payload)));
-    }
-
-    private static string? ReadCookie(string? header, string name)
-    {
-        if (string.IsNullOrWhiteSpace(header))
-        {
-            return null;
-        }
-
-        foreach (var part in header.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-        {
-            var separator = part.IndexOf('=');
-            if (separator > 0 && part[..separator].Equals(name, StringComparison.Ordinal))
-            {
-                return part[(separator + 1)..];
-            }
-        }
-
-        return null;
     }
 
     private static string Base64UrlEncode(byte[] bytes) =>

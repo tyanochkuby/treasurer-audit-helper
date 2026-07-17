@@ -30,9 +30,9 @@ public sealed class AccessSessionServiceTests
         Assert.False(service.IsAuthenticated(null));
         Assert.True(service.TryCreateSession("correct-horse-battery-staple", out var token));
 
-        Assert.True(service.IsAuthenticated($"other=x; {AccessSessionService.CookieName}={token}"));
+        Assert.True(service.IsAuthenticated(token));
 
         clock.Now = clock.Now.AddMinutes(31);
-        Assert.False(service.IsAuthenticated($"{AccessSessionService.CookieName}={token}"));
+        Assert.False(service.IsAuthenticated(token));
     }
 }

@@ -49,18 +49,10 @@ public sealed class AuditMapper
 
     public static string GetFieldDisplayName(int entityType, string field) => FieldLabelCatalog.GetDisplayName(entityType, field);
 
-    public static string GetEntityTypeName(int code) => code switch
-    {
-        0 => nameof(KnownEntityType.Unknown),
-        1 => nameof(KnownEntityType.ContractHeaderEntity),
-        2 => nameof(KnownEntityType.AnnexHeaderEntity),
-        3 => nameof(KnownEntityType.AnnexChangeEntity),
-        4 => nameof(KnownEntityType.FileEntity),
-        5 => nameof(KnownEntityType.InvoiceEntity),
-        6 => nameof(KnownEntityType.PaymentScheduleEntity),
-        7 => nameof(KnownEntityType.ContractFundingEntity),
-        _ => $"Unknown ({code})"
-    };
+    public static string GetEntityTypeName(int code) =>
+        Enum.IsDefined(typeof(KnownEntityType), code)
+            ? ((KnownEntityType)code).ToString()
+            : $"Unknown ({code})";
 
     private static bool IsMeaningfulChange(int operationType, AuditChangeDto change) => operationType switch
     {
@@ -72,13 +64,7 @@ public sealed class AuditMapper
 
     private static string CreateDescription(string operation, string entityType, IReadOnlyList<AuditChangeDto> changes)
     {
-        var operationLabel = operation switch
-        {
-            "Added" => "Dodano",
-            "Deleted" => "Usunięto",
-            "Modified" => "Zmieniono",
-            _ => "Zarejestrowano operację"
-        };
+        var operationLabel = PolishAuditLabels.OperationLabel(operation) ?? "Zarejestrowano operację";
         var field = changes.Count == 1 && changes[0].FieldDisplayName is not null
             ? $": {changes[0].FieldDisplayName}"
             : string.Empty;
