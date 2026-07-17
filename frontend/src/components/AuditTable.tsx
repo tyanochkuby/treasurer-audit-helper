@@ -107,12 +107,17 @@ function ValueCell({ value, variant }: { value: string | null; variant: ValueVar
   const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
   if (value === null || value === '') return <span className="text-[15px] text-[#B0B7C3]">—</span>
-  const isLong = value.length > 90 || value.includes('\n')
-  if (!isLong) return <span className={`inline-block max-w-full break-words [overflow-wrap:anywhere] ${valueClass(variant)}`}>{value}</span>
-  const formattedJson = formatJson(value)
-  const displayedValue = expanded && formattedJson ? formattedJson : expanded ? value : `${value.slice(0, 72)}…`
+
+  const json = formatJson(value)
+  const text = json ?? value
+  const valueClasses = json
+    ? 'block font-mono text-[13px] font-normal leading-6 text-[#1F2937]'
+    : `inline ${valueClass(variant)}`
+  const isLong = text.length > 90 || text.includes('\n')
+
+  if (!isLong) return <span className={`max-w-full break-words [overflow-wrap:anywhere] ${valueClasses}`}>{text}</span>
   return <div className="max-w-full">
-    <span className={`${expanded && formattedJson ? 'block font-mono text-[13px] font-normal leading-6 text-[#1F2937]' : 'inline'} max-w-full whitespace-pre-wrap break-words [overflow-wrap:anywhere] ${expanded && formattedJson ? '' : valueClass(variant)}`}>{displayedValue}</span>{' '}
+    <span className={`max-w-full whitespace-pre-wrap break-words [overflow-wrap:anywhere] ${valueClasses}`}>{expanded ? text : `${text.slice(0, 72)}…`}</span>{' '}
     <button type="button" aria-expanded={expanded} onClick={() => setExpanded((current) => !current)} className="text-xs font-bold text-brand-blue hover:underline">{expanded ? t('table.hideAll') : t('table.showAll')}</button>
   </div>
 }
