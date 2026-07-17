@@ -30,7 +30,8 @@ function Application() {
     staleTime: contractQueryFreshnessMs,
     refetchOnWindowFocus: false,
   })
-  const unauthorized = contracts.error instanceof ApiError && contracts.error.status === 401
+  const unauthorized = [contracts.error, auditCounts.error]
+    .some(error => error instanceof ApiError && error.status === 401)
   const contractsWithCounts = useMemo(() => {
     const countByContract = new Map(auditCounts.data?.map(count => [count.contractId, count.auditEventCount]))
     return contracts.data?.map(contract => ({
@@ -43,10 +44,6 @@ function Application() {
     client.clear()
     setRequiresAccess(true)
   }, [client])
-
-  useEffect(() => {
-    if (auditCounts.error instanceof ApiError && auditCounts.error.status === 401) onUnauthorized()
-  }, [auditCounts.error, onUnauthorized])
 
   async function afterAccess() {
     setRequiresAccess(false)

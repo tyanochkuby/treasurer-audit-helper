@@ -157,13 +157,15 @@ export const AuditTable = memo(function AuditTable({ items, filtered, contract }
     <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">{filtered ? t('table.noFilteredResultsDescription') : t('table.noHistoryDescription')}</p>
   </Card>
 
-  return <div role="list" aria-label={t('table.caption')} className="space-y-3">
-    {items.map((item) => <article key={item.id} role="listitem" className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-      <EventHeader item={item} contract={contract} dateFormatter={dateFormatter} timeFormatter={timeFormatter} />
+  return <ul aria-label={t('table.caption')} className="m-0 list-none space-y-3 p-0">
+    {items.map((item) => <li key={item.id}>
+      <article className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <EventHeader item={item} contract={contract} dateFormatter={dateFormatter} timeFormatter={timeFormatter} />
 
-      {item.changes.length > 0 ? <div className="divide-y divide-[#E5E9F0] border-t border-[#E5E9F0]">
-        {item.changes.map((change, index) => <ChangeRow key={`${item.id}-${change.fieldName ?? index}`} item={item} change={change} />)}
-      </div> : <p className="border-t border-slate-200 px-4 py-4 text-sm italic text-slate-500">{t('table.noRecordedDifference')}</p>}
-    </article>)}
-  </div>
+        {item.changes.length > 0 ? <div className="divide-y divide-[#E5E9F0] border-t border-[#E5E9F0]">
+          {item.changes.map((change, index) => <ChangeRow key={`${item.id}-${change.fieldName ?? index}`} item={item} change={change} />)}
+        </div> : <p className="border-t border-slate-200 px-4 py-4 text-sm italic text-slate-500">{t('table.noRecordedDifference')}</p>}
+      </article>
+    </li>)}
+  </ul>
 })
