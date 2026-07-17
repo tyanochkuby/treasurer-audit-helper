@@ -4,8 +4,8 @@ import { MiddleTruncate } from './MiddleTruncate'
 
 describe('MiddleTruncate', () => {
   it('keeps both ends of a long value and exposes the complete text', () => {
-    const value = 'UM/2026 — Bardzo długa nazwa dokumentu z istotnym zakończeniem'
-    render(<MiddleTruncate value={value} endLength={18} />)
+    const value = 'e00a54f4-762c-4ebc-83f7-f8655e642f10'
+    render(<MiddleTruncate value={value} />)
 
     const text = screen.getByTitle(value)
     expect(text).toHaveTextContent(value)
