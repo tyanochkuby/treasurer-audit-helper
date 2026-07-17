@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using AuditApi.Domain;
 using AuditApi.Models;
@@ -67,6 +68,16 @@ public sealed class CsvExportService
         }
         if (firstNonWhitespace >= 0 && value[firstNonWhitespace] is '=' or '+' or '-' or '@')
         {
+            // A plain negative number is data, not a formula; left it numeric for Excel.
+            if (value[firstNonWhitespace] == '-' && decimal.TryParse(
+                    value.AsSpan(firstNonWhitespace),
+                    NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint,
+                    CultureInfo.InvariantCulture,
+                    out _))
+            {
+                return value;
+            }
+
             return value.Insert(firstNonWhitespace, "'");
         }
 
