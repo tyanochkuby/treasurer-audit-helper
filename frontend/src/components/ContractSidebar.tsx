@@ -45,7 +45,7 @@ export function ContractSidebar({ contracts, selectedId, open, onClose, onSelect
 
   return <>
     {open && <button aria-label={t('sidebar.close')} onClick={onClose} className="fixed inset-0 z-30 bg-brand-navy/45 lg:hidden" />}
-    <aside className={`fixed inset-y-0 left-0 z-40 flex w-[min(88vw,350px)] flex-col border-r border-slate-200 bg-white shadow-2xl transition-transform duration-100 will-change-transform lg:static lg:z-auto lg:w-[330px] lg:translate-x-0 lg:shadow-none lg:transition-none ${open ? 'translate-x-0' : '-translate-x-full'}`} aria-label={t('sidebar.label')}>
+    <aside className={`fixed inset-y-0 left-0 z-40 flex w-[min(88vw,400px)] flex-col border-r border-slate-200 bg-white transition-transform duration-100 will-change-transform lg:static lg:z-auto lg:w-[400px] lg:translate-x-0 lg:shadow-none lg:transition-none ${open ? 'translate-x-0 shadow-2xl' : '-translate-x-full shadow-none'}`} aria-label={t('sidebar.label')}>
       <div className="shrink-0 border-b border-slate-200 bg-white px-5 py-5">
         <div className="flex items-center justify-between">
           <div>

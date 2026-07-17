@@ -126,13 +126,13 @@ export function MainScreen({ contracts, onUnauthorized, onLogout }: Props) {
       <ContractSidebar contracts={contracts} selectedId={selectedId} open={sidebarOpen} onClose={closeSidebar} onSelect={selectContract} onLogout={onLogout} />
       <main ref={mainRef} className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain">
         {!selected ? <div className="h-full p-4 sm:p-6 xl:p-8"><NoSelection onOpen={() => setSidebarOpen(true)} /></div> : <>
-          <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-slate-200 bg-canvas/95 px-4 py-3 shadow-sm backdrop-blur sm:gap-4 sm:px-6 xl:h-[104px] xl:px-8">
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-blue">{t('main.auditHistory')}</p>
-              <h1 className="mt-1 min-w-0 overflow-hidden text-xl font-bold tracking-tight text-brand-navy sm:text-2xl"><MiddleTruncate value={selected.displayName} endLength={28} /></h1>
-              <p className="mt-1 break-all text-xs text-slate-500">{t('sidebar.organization', { id: selected.organizationId })}</p>
+          <div className="sticky top-0 z-20 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1 border-b border-slate-200 bg-canvas/95 px-4 py-3 shadow-sm backdrop-blur sm:flex sm:gap-4 sm:px-6 xl:h-[104px] xl:px-8">
+            <div className="contents sm:block sm:min-w-0 sm:flex-1">
+              <p className="col-start-1 row-start-1 self-center text-xs font-bold uppercase tracking-[0.16em] text-brand-blue">{t('main.auditHistory')}</p>
+              <h1 className="col-span-2 row-start-2 min-w-0 overflow-hidden text-xl font-bold tracking-tight text-brand-navy sm:mt-1 sm:text-2xl"><MiddleTruncate value={selected.displayName} endLength={28} /></h1>
+              <p className="col-span-2 row-start-3 break-all text-xs text-slate-500 sm:mt-1">{t('sidebar.organization', { id: selected.organizationId })}</p>
             </div>
-            <div className="flex shrink-0 gap-1.5 sm:gap-2">
+            <div className="col-start-2 row-start-1 flex shrink-0 gap-1.5 sm:gap-2">
               <Button variant="outline" onClick={openSidebar} title={t('main.changeContract')} aria-label={t('main.changeContract')} className="h-10 w-10 border-slate-300 bg-white p-0 text-slate-700 shadow-sm hover:bg-slate-50 lg:hidden"><MenuIcon className="h-5 w-5" /></Button>
               <Button variant="outline" onClick={refresh} disabled={history.isFetching} title={t('main.refresh')} aria-label={t('main.refresh')} className="h-10 w-10 gap-2 border-slate-300 bg-white p-0 font-bold text-slate-700 shadow-sm hover:bg-slate-50 sm:w-auto sm:px-3"><RefreshIcon className={`h-5 w-5 ${history.isFetching ? 'animate-spin' : ''}`} /><span className="hidden sm:inline">{t('main.refresh')}</span></Button>
               <Button onClick={exportCsv} disabled={exporting || history.isPending} title={exporting ? t('main.exporting') : t('main.exportCsv')} aria-label={exporting ? t('main.exporting') : t('main.exportCsv')} className="h-10 w-10 gap-2 bg-brand-amber p-0 font-bold text-brand-navy shadow-sm hover:bg-brand-amber/90 sm:w-auto sm:px-4"><DownloadIcon className="h-5 w-5" /><span className="hidden sm:inline">{exporting ? t('main.exporting') : t('main.exportCsv')}</span></Button>

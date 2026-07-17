@@ -13,4 +13,14 @@ describe('MiddleTruncate', () => {
     expect(text.firstElementChild).toHaveClass('truncate')
     expect(text.lastElementChild).toHaveClass('shrink-0')
   })
+
+  it('keeps whitespace away from the truncation boundary', () => {
+    const value = 'A long document name with a meaningful ending'
+    render(<MiddleTruncate value={value} endLength={18} />)
+
+    const text = screen.getByTitle(value)
+    expect(text).toHaveTextContent(value)
+    expect(text.firstElementChild?.textContent).not.toMatch(/\s$/u)
+    expect(text.lastElementChild?.textContent).not.toMatch(/^\s/u)
+  })
 })
