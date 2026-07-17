@@ -12,7 +12,7 @@ var host = new HostBuilder()
     {
         services.AddMemoryCache();
         services.AddSingleton(TimeProvider.System);
-        services.AddSingleton<AppSettings>();
+        services.AddSingleton(new AppSettings());
         services.AddSingleton<ISqlConnectionFactory, SqlConnectionFactory>();
         services.AddSingleton<IAuditRepository, SqlAuditRepository>();
         services.AddSingleton<AccessSessionService>();
