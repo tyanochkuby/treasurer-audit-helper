@@ -23,6 +23,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Infrastructure\Sql\GetContractAuditCounts.sql"
+                      LogicalName="AuditApi.Infrastructure.Sql.GetContractAuditCounts.sql" />
+    <EmbeddedResource Include="Infrastructure\Sql\MaterializeAuditScope.sql"
+                      LogicalName="AuditApi.Infrastructure.Sql.MaterializeAuditScope.sql" />
     <EmbeddedResource Include="..\frontend\src\i18n\pl\auditFieldLabels.json"
                       Link="Localization\auditFieldLabels.pl.json"
                       LogicalName="AuditApi.Localization.auditFieldLabels.pl.json" />
