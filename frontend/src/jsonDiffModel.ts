@@ -55,11 +55,11 @@ function collectChanges(oldValue: JsonValue | undefined, newValue: JsonValue | u
   }
 
   if (Object.is(oldValue, newValue)) return
-  if (oldValue === undefined && newValue !== undefined && (isObject(newValue) || Array.isArray(newValue))) {
+  if ((oldValue === undefined || oldValue === null) && newValue !== undefined && (isObject(newValue) || Array.isArray(newValue))) {
     collectAddedOrRemovedLeaves(newValue, path, 'new', changes)
     return
   }
-  if (newValue === undefined && oldValue !== undefined && (isObject(oldValue) || Array.isArray(oldValue))) {
+  if ((newValue === undefined || newValue === null) && oldValue !== undefined && (isObject(oldValue) || Array.isArray(oldValue))) {
     collectAddedOrRemovedLeaves(oldValue, path, 'old', changes)
     return
   }

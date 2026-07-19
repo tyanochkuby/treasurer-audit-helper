@@ -44,6 +44,24 @@ describe('JsonDiff', () => {
     ])
   })
 
+  it('expands null-to-object and object-to-null changes into leaf paths', () => {
+    expect(createJsonDiff(
+      JSON.stringify({ details: null }),
+      JSON.stringify({ details: { subject: 'new', amount: 100 } }),
+    )?.changes).toEqual([
+      { path: 'details.subject', newValue: 'new' },
+      { path: 'details.amount', newValue: 100 },
+    ])
+
+    expect(createJsonDiff(
+      JSON.stringify({ details: { subject: 'old', amount: 90 } }),
+      JSON.stringify({ details: null }),
+    )?.changes).toEqual([
+      { path: 'details.subject', oldValue: 'old' },
+      { path: 'details.amount', oldValue: 90 },
+    ])
+  })
+
   it('uses the regular missing-value convention for added and removed JSON leaves', async () => {
     const user = userEvent.setup()
     const data = createJsonDiff('{}', JSON.stringify({ publishedAt: '2026-07-08' }))

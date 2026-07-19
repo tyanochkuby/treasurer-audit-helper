@@ -18,6 +18,10 @@ function parseJson(value: string): unknown | undefined {
   }
 }
 
+function isStructuredJson(value: unknown): value is Record<string, unknown> | unknown[] {
+  return value !== null && typeof value === 'object'
+}
+
 function JsonTree({ value }: { value: unknown }) {
   if (Array.isArray(value)) return <ul className="ml-4 border-l border-slate-200 pl-3">
     {value.map((child, index) => <li key={index} className="py-0.5"><code className="text-slate-500">[{index}]</code>: <JsonTreeValue value={child} /></li>)}
@@ -28,31 +32,40 @@ function JsonTree({ value }: { value: unknown }) {
   return <JsonTreeValue value={value} />
 }
 
+function DateTimeValue({ date, className }: { date: Date; className?: string }) {
+  const { i18n } = useTranslation()
+  const locale = i18n.resolvedLanguage ?? i18n.language
+  return <time dateTime={date.toISOString()} title={utcDateTimeFormatter(locale).format(date)} className={className}>{localDateTimeFormatter(locale).format(date)}</time>
+}
+
+function JsonSummary({ value }: { value: Record<string, unknown> | unknown[] }) {
+  const { t } = useTranslation()
+  return <>{Array.isArray(value) ? t('table.jsonArray', { count: value.length }) : t('table.jsonObject', { count: Object.keys(value).length })}</>
+}
+
 function JsonTreeValue({ value }: { value: unknown }) {
-  const { t, i18n } = useTranslation()
-  const serialized = JSON.stringify(value)
   const date = typeof value === 'string' ? parseUtcDateTime(value) : null
-  if (date) {
-    const locale = i18n.resolvedLanguage ?? i18n.language
-    return <time dateTime={date.toISOString()} title={utcDateTimeFormatter(locale).format(date)}>{localDateTimeFormatter(locale).format(date)}</time>
-  }
-  if (value !== null && typeof value === 'object') return <details className="inline-block align-top"><summary className="cursor-pointer text-brand-blue">{Array.isArray(value) ? t('table.jsonArray', { count: value.length }) : t('table.jsonObject', { count: Object.keys(value).length })}</summary><JsonTree value={value} /></details>
-  return <code>{serialized}</code>
+  if (date) return <DateTimeValue date={date} />
+  if (isStructuredJson(value)) return <details className="inline-block align-top"><summary className="cursor-pointer text-brand-blue"><JsonSummary value={value} /></summary><JsonTree value={value} /></details>
+  return <code>{JSON.stringify(value)}</code>
+}
+
+function StructuredJsonValue({ value }: { value: Record<string, unknown> | unknown[] }) {
+  return <details className="max-w-full font-mono text-[13px] text-[#1F2937]"><summary className="cursor-pointer font-sans text-sm font-bold text-brand-blue"><JsonSummary value={value} /></summary><div className="mt-2 rounded-md bg-slate-50 p-3"><JsonTree value={value} /></div></details>
 }
 
 export function AuditValue({ value, variant, jsonLiteral = false }: { value: string | null; variant: ValueVariant; jsonLiteral?: boolean }) {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
   if (value === null || value === '') return <span className="text-[15px] text-[#B0B7C3]">—</span>
 
   const parsed = parseJson(value)
-  const structuredJson = parsed !== null && typeof parsed === 'object'
+  const structuredJson = isStructuredJson(parsed)
   const dateValue = jsonLiteral && typeof parsed === 'string' ? parsed : value
   const date = !structuredJson && typeof dateValue === 'string' ? parseUtcDateTime(dateValue) : null
-  const locale = i18n.resolvedLanguage ?? i18n.language
 
-  if (structuredJson) return <details className="max-w-full font-mono text-[13px] text-[#1F2937]"><summary className="cursor-pointer font-sans text-sm font-bold text-brand-blue">{Array.isArray(parsed) ? t('table.jsonArray', { count: parsed.length }) : t('table.jsonObject', { count: Object.keys(parsed).length })}</summary><div className="mt-2 rounded-md bg-slate-50 p-3"><JsonTree value={parsed} /></div></details>
-  if (date) return <time dateTime={date.toISOString()} title={utcDateTimeFormatter(locale).format(date)} className={valueClass(variant)}>{localDateTimeFormatter(locale).format(date)}</time>
+  if (structuredJson) return <StructuredJsonValue value={parsed} />
+  if (date) return <DateTimeValue date={date} className={valueClass(variant)} />
 
   const isLong = value.length > 90 || value.includes('\n')
   if (!isLong) return <span className={`max-w-full break-words [overflow-wrap:anywhere] ${valueClass(variant)}`}>{value}</span>
