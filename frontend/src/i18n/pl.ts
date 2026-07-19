@@ -45,6 +45,8 @@ export const pl = {
     auditHistory: 'Historia audytowa',
     changeContract: 'Zmień umowę',
     refresh: 'Odśwież',
+    expandAllEvents: 'Rozwiń wszystkie',
+    collapseAllEvents: 'Zwiń wszystkie',
     exporting: 'Eksportowanie…',
     exportCsv: 'Eksportuj CSV',
     newDataTitle: 'Dostępne są nowe dane dla tej umowy.',
@@ -126,6 +128,5 @@ export const pl = {
     copyTechnicalData: 'Kopiuj dane techniczne',
     technicalDataCopied: 'Skopiowano dane techniczne',
     technicalDataCopyFailed: 'Nie udało się skopiować danych technicznych',
-    noRecordedDifference: 'Brak różnic w zapisanych wartościach',
   },
 } as const

@@ -3,16 +3,17 @@ import { useQuery } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ApiError, api } from '../api'
-import type { AuditFilters, Contract } from '../types'
+import type { AuditEvent, AuditFilters, Contract } from '../types'
 import { AuditFiltersPanel } from './AuditFilters'
 import { AuditTable } from './AuditTable'
 import { ContractSidebar } from './ContractSidebar'
-import { ContractIcon, DownloadIcon, MenuIcon, RefreshIcon } from './Icons'
+import { CollapseAllIcon, ContractIcon, DownloadIcon, ExpandAllIcon, MenuIcon, RefreshIcon } from './Icons'
 import { MiddleTruncate } from './MiddleTruncate'
 import { Alert } from './ui/alert'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
 import { Skeleton } from './ui/skeleton'
+import { useAuditEventExpansion } from '../useAuditEventExpansion'
 
 function readFilters(params: URLSearchParams): AuditFilters {
   return {
@@ -34,6 +35,8 @@ interface Props {
   onUnauthorized: () => void
   onLogout: () => Promise<void>
 }
+
+const EMPTY_AUDIT_EVENTS: AuditEvent[] = []
 
 export function MainScreen({ contracts, onUnauthorized, onLogout }: Props) {
   const { t, i18n } = useTranslation()
@@ -123,6 +126,10 @@ export function MainScreen({ contracts, onUnauthorized, onLogout }: Props) {
     if (Number.isInteger(selectedCode) && selectedCode > 7) codes.add(selectedCode)
     return [...codes].sort((left, right) => left - right)
   }, [history.data, filters.entityType])
+  const historyItems = history.data?.items ?? EMPTY_AUDIT_EVENTS
+  const filtered = hasFilters(filters)
+  const expansion = useAuditEventExpansion(history.data ? selectedId : '', historyItems, filtered, filtered ? params.toString() : '', filters.sort === 'desc')
+  const expansionActionLabel = expansion.allExpanded ? t('main.collapseAllEvents') : t('main.expandAllEvents')
 
   return <div className="h-dvh overflow-hidden bg-canvas">
     <div className="flex h-full min-h-0">
@@ -137,8 +144,12 @@ export function MainScreen({ contracts, onUnauthorized, onLogout }: Props) {
             </div>
             <div className="col-start-2 row-start-1 flex shrink-0 gap-1.5 sm:gap-2">
               <Button variant="outline" onClick={openSidebar} title={t('main.changeContract')} aria-label={t('main.changeContract')} className="h-10 w-10 border-slate-300 bg-white p-0 text-slate-700 shadow-sm hover:bg-slate-50 lg:hidden"><MenuIcon className="h-5 w-5" /></Button>
-              <Button variant="outline" onClick={refresh} disabled={history.isFetching} title={t('main.refresh')} aria-label={t('main.refresh')} className="h-10 w-10 gap-2 border-slate-300 bg-white p-0 font-bold text-slate-700 shadow-sm hover:bg-slate-50 sm:w-auto sm:px-3"><RefreshIcon className={`h-5 w-5 ${history.isFetching ? 'animate-spin' : ''}`} /><span className="hidden sm:inline">{t('main.refresh')}</span></Button>
-              <Button onClick={exportCsv} disabled={exporting || history.isPending} title={exporting ? t('main.exporting') : t('main.exportCsv')} aria-label={exporting ? t('main.exporting') : t('main.exportCsv')} className="h-10 w-10 gap-2 bg-brand-amber p-0 font-bold text-brand-navy shadow-sm hover:bg-brand-amber/90 sm:w-auto sm:px-4"><DownloadIcon className="h-5 w-5" /><span className="hidden sm:inline">{exporting ? t('main.exporting') : t('main.exportCsv')}</span></Button>
+              <Button variant="outline" onClick={refresh} disabled={history.isFetching} title={t('main.refresh')} aria-label={t('main.refresh')} className="h-10 w-10 gap-2 border-slate-300 bg-white p-0 font-bold text-slate-700 shadow-sm hover:bg-slate-50 xl:w-auto xl:px-3"><RefreshIcon className={`h-5 w-5 ${history.isFetching ? 'animate-spin' : ''}`} /><span className="hidden xl:inline">{t('main.refresh')}</span></Button>
+              {expansion.expandableCount > 1 && <Button variant="outline" onClick={() => expansion.setAllExpanded(!expansion.allExpanded)} title={expansionActionLabel} aria-label={expansionActionLabel} className="h-10 w-10 gap-2 border-slate-300 bg-white p-0 font-bold text-slate-700 shadow-sm hover:bg-slate-50 xl:w-auto xl:px-3">
+                {expansion.allExpanded ? <CollapseAllIcon className="h-5 w-5" /> : <ExpandAllIcon className="h-5 w-5" />}
+                <span className="hidden xl:inline">{expansionActionLabel}</span>
+              </Button>}
+              <Button onClick={exportCsv} disabled={exporting || history.isPending} title={exporting ? t('main.exporting') : t('main.exportCsv')} aria-label={exporting ? t('main.exporting') : t('main.exportCsv')} className="h-10 w-10 gap-2 bg-brand-amber p-0 font-bold text-brand-navy shadow-sm hover:bg-brand-amber/90 xl:w-auto xl:px-4"><DownloadIcon className="h-5 w-5" /><span className="hidden xl:inline">{exporting ? t('main.exporting') : t('main.exportCsv')}</span></Button>
             </div>
           </div>
 
@@ -156,7 +167,7 @@ export function MainScreen({ contracts, onUnauthorized, onLogout }: Props) {
               {history.data && <span>{t('main.loadedAt')} <time dateTime={history.data.generatedAtUtc}>{loadedFormatter.format(new Date(history.data.generatedAtUtc))}</time></span>}
             </div>
 
-            {history.isPending ? <LoadingHistory /> : history.isError ? <RequestError onRetry={() => history.refetch()} /> : <AuditTable items={history.data.items} filtered={hasFilters(filters)} contract={selected} />}
+            {history.isPending ? <LoadingHistory /> : history.isError ? <RequestError onRetry={() => history.refetch()} /> : <AuditTable items={history.data.items} filtered={filtered} contract={selected} expandedIds={expansion.expandedIds} onToggle={(eventId, expanded) => expansion.setEventExpanded(eventId, expanded)} />}
           </div>
         </>}
       </main>
