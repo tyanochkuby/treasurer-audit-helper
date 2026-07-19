@@ -56,6 +56,14 @@ describe('AuditTable', () => {
     expect(screen.getByText('Dodano')).toHaveClass('border-[#9FE1CB]', 'bg-[#EDF9F0]', 'text-[#085041]')
   })
 
+  it('shows UTC field values in Warsaw time and keeps UTC on hover', () => {
+    const timestamp = '2026-07-14T08:42:12Z'
+    render(<AuditTable items={[{ ...item, changes: [{ ...item.changes[0], oldValue: null, newValue: timestamp }] }]} filtered={false} contract={contract} />)
+
+    const localValue = screen.getByText('14 lip 2026, 10:42:12')
+    expect(localValue).toHaveAttribute('title', '14 lip 2026, 08:42:12 UTC')
+  })
+
   it('preserves the previous value as plain evidence for deleted fields', () => {
     render(<AuditTable items={[{ ...item, operationType: 'Deleted', changes: [{ ...item.changes[0], newValue: null }] }]} filtered={false} contract={contract} />)
 

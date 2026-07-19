@@ -34,4 +34,44 @@ describe('JsonDiff', () => {
     expect(createJsonDiff('{"value":1}', '{\n  "value": 1\n}')).toBeNull()
     expect(createJsonDiff('not json', '{}')).toBeNull()
   })
+
+  it('expands added nested objects into changed leaf paths', () => {
+    const data = createJsonDiff('{"changes":[]}', JSON.stringify({ changes: [{ changeType: 'TSU03', comment: 'test' }] }))
+
+    expect(data?.changes).toEqual([
+      { path: 'changes[0].changeType', newValue: 'TSU03' },
+      { path: 'changes[0].comment', newValue: 'test' },
+    ])
+  })
+
+  it('expands null-to-object and object-to-null changes into leaf paths', () => {
+    expect(createJsonDiff(
+      JSON.stringify({ details: null }),
+      JSON.stringify({ details: { subject: 'new', amount: 100 } }),
+    )?.changes).toEqual([
+      { path: 'details.subject', newValue: 'new' },
+      { path: 'details.amount', newValue: 100 },
+    ])
+
+    expect(createJsonDiff(
+      JSON.stringify({ details: { subject: 'old', amount: 90 } }),
+      JSON.stringify({ details: null }),
+    )?.changes).toEqual([
+      { path: 'details.subject', oldValue: 'old' },
+      { path: 'details.amount', oldValue: 90 },
+    ])
+  })
+
+  it('uses the regular missing-value convention for added and removed JSON leaves', async () => {
+    const user = userEvent.setup()
+    const data = createJsonDiff('{}', JSON.stringify({ publishedAt: '2026-07-08' }))
+    expect(data).not.toBeNull()
+
+    render(<JsonDiff data={data!} />)
+    await user.click(screen.getByRole('button', { name: 'Pokaż różnice' }))
+
+    expect(screen.getByText('—')).toBeInTheDocument()
+    expect(screen.getByText('→')).toBeInTheDocument()
+    expect(screen.getByText('"2026-07-08"')).toHaveClass('bg-[#EDF9F0]')
+  })
 })

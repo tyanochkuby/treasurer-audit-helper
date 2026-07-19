@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { formatJsonValue, type JsonDiffData } from '../jsonDiffModel'
+import { AuditValue } from './AuditValue'
 
 export function JsonDiff({ data }: { data: JsonDiffData }) {
   const { t } = useTranslation()
@@ -16,9 +17,9 @@ export function JsonDiff({ data }: { data: JsonDiffData }) {
       {data.changes.map((change) => <div key={change.path} className="grid gap-2 border-b border-[#E5E9F0] px-4 py-3 last:border-b-0 md:grid-cols-[minmax(12rem,35%)_minmax(0,1fr)]">
         <code className="break-all text-slate-500">{change.path}</code>
         <div className="flex min-w-0 flex-wrap items-center gap-2">
-          {change.oldValue !== undefined && <code className="max-w-full rounded-[6px] bg-[#FEF1F1] px-2 py-0.5 text-[#8A93A3] line-through [overflow-wrap:anywhere]">{formatJsonValue(change.oldValue)}</code>}
-          {change.oldValue !== undefined && change.newValue !== undefined && <span className="text-[#B0B7C3]" aria-hidden="true">→</span>}
-          {change.newValue !== undefined && <code className="max-w-full rounded-[6px] bg-[#EDF9F0] px-2 py-0.5 font-medium text-[#1F2937] [overflow-wrap:anywhere]">{formatJsonValue(change.newValue)}</code>}
+          <AuditValue value={change.oldValue === undefined ? null : formatJsonValue(change.oldValue)} variant="old" jsonLiteral />
+          <span className="text-[#B0B7C3]" aria-hidden="true">→</span>
+          <AuditValue value={change.newValue === undefined ? null : formatJsonValue(change.newValue)} variant="new" jsonLiteral />
         </div>
       </div>)}
     </div>}
