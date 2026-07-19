@@ -15,8 +15,6 @@ public sealed class CsvExportService
     {
         var lines = new List<string>
         {
-            // Excel delimiter hint; makes the file open correctly regardless of the OS list-separator locale.
-            "sep=;",
             Row("Raport historii zmian umowy"),
             Row("Identyfikator umowy", contract.Id.ToString()),
             Row("Nazwa umowy", contract.DisplayName),
