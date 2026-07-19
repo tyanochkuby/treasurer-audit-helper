@@ -163,6 +163,11 @@ describe('AuditTable', () => {
     render(<AuditTable items={[item]} filtered={false} contract={contract} expandedIds={new Set()} onToggle={onToggle} />)
 
     const header = screen.getByRole('button', { name: /14 lip 2026/ })
+    expect(header).toHaveClass('grid-cols-[auto_minmax(0,1fr)_auto]', 'sm:flex')
+    expect(screen.getByText('14 lip 2026').closest('time')).toHaveClass('col-start-2', 'row-start-1')
+    expect(screen.getByText('Zmieniono')).toHaveClass('col-start-3', 'row-start-1')
+    expect(screen.getByText('Umowa').parentElement).toHaveClass('col-start-2', 'row-start-2')
+    expect(screen.getByText('#987').parentElement).toHaveClass('col-start-3', 'row-start-2')
     expect(header).toHaveAttribute('aria-expanded', 'false')
     expect(header).toHaveAttribute('aria-controls', 'audit-event-987-body')
     expect(document.getElementById('audit-event-987-body')).toHaveAttribute('aria-hidden', 'true')

@@ -115,20 +115,22 @@ function EventHeader({ item, contract, dateFormatter, timeFormatter, utcFormatte
   const fieldLabels = item.changes.map((change) => fieldLabel(change.fieldName, change.fieldDisplayName, item.entityTypeCode, t))
 
   return <header className="flex items-stretch bg-slate-50/90 transition-colors hover:bg-slate-100/90">
-    <button type="button" disabled={!expandable} aria-expanded={expandable ? expanded : undefined} aria-controls={expandable ? bodyId : undefined} onClick={onToggle} className="grid min-w-0 flex-1 grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-2 px-4 py-3 text-left focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-blue disabled:cursor-default sm:flex sm:gap-x-4">
-      {expandable && <ChevronIcon className={`h-4 w-4 shrink-0 text-[#8A93A3] transition-transform duration-150 motion-reduce:transition-none ${expanded ? 'rotate-90' : ''}`} />}
-      <time dateTime={item.occurredAtUtc} title={utcFormatter.format(new Date(item.occurredAtUtc))} className="shrink-0 whitespace-nowrap">
+    <button type="button" disabled={!expandable} aria-expanded={expandable ? expanded : undefined} aria-controls={expandable ? bodyId : undefined} onClick={onToggle} className="grid min-w-0 flex-1 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 px-4 py-3 text-left focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-blue disabled:cursor-default sm:flex sm:gap-x-4">
+      <span className="row-span-2 h-4 w-4 shrink-0" aria-hidden="true">
+        {expandable && <ChevronIcon className={`h-4 w-4 text-[#8A93A3] transition-transform duration-150 motion-reduce:transition-none ${expanded ? 'rotate-90' : ''}`} />}
+      </span>
+      <time dateTime={item.occurredAtUtc} title={utcFormatter.format(new Date(item.occurredAtUtc))} className="col-start-2 row-start-1 shrink-0 whitespace-nowrap">
         <span className="text-[15px] font-medium text-[#1F2937]">{dateFormatter.format(new Date(item.occurredAtUtc))}</span>{' '}
         <span className="text-[13px] font-normal text-[#8A93A3]">{timeFormatter.format(new Date(item.occurredAtUtc))}</span>
       </time>
-      <Badge className={`shrink-0 justify-self-end rounded-[10px] border px-2.5 py-0.5 text-xs font-medium sm:justify-self-auto ${operationClass(item.operationType)}`}>{operationLabel(item.operationType, t)}</Badge>
-      <div className="flex min-w-0 items-center gap-1.5 sm:shrink-0">
+      <Badge className={`col-start-3 row-start-1 shrink-0 justify-self-end rounded-[10px] border px-2.5 py-0.5 text-xs font-medium sm:justify-self-auto ${operationClass(item.operationType)}`}>{operationLabel(item.operationType, t)}</Badge>
+      <div className="col-start-2 row-start-2 flex min-w-0 items-center gap-1.5 sm:shrink-0">
         <span className="font-semibold text-slate-800">{entityLabel(item.entityType, item.entityTypeCode, t)}</span>
         <span className="hidden text-slate-400 sm:inline" aria-hidden="true">·</span>
         <span className="hidden text-sm text-[#8A93A3] sm:inline">{t('table.fieldCount', { count: item.changes.length })}</span>
       </div>
       {expandable && !expanded && <ChangedFieldsSummary labels={fieldLabels} />}
-      <div className="ml-auto flex min-w-0 items-center justify-end gap-2 overflow-hidden">
+      <div className="col-start-3 row-start-2 ml-auto flex min-w-0 items-center justify-end gap-2 overflow-hidden">
         <span title={item.actorId} className="hidden min-w-0 truncate text-[13px] font-normal text-[#8A93A3] md:inline">{item.actorDisplayName}</span>
         <span className="shrink-0 font-mono text-xs font-normal text-[#8A93A3]">#{item.id}</span>
       </div>
