@@ -121,6 +121,8 @@ export const pl = {
     jsonDiffSummary_other: 'JSON · {{count}} pola różnią się',
     showJsonDiff: 'Pokaż różnice',
     hideJsonDiff: 'Ukryj różnice',
+    jsonObject: 'Obiekt JSON ({{count}})',
+    jsonArray: 'Tablica JSON ({{count}})',
     copyTechnicalData: 'Kopiuj dane techniczne',
     technicalDataCopied: 'Skopiowano dane techniczne',
     technicalDataCopyFailed: 'Nie udało się skopiować danych technicznych',

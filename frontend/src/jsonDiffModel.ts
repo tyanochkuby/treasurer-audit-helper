@@ -22,6 +22,25 @@ function childPath(path: string, key: string | number, array: boolean) {
   return path ? `${path}.${key}` : String(key)
 }
 
+function collectAddedOrRemovedLeaves(value: JsonValue, path: string, variant: 'old' | 'new', changes: JsonChange[]) {
+  if (isObject(value)) {
+    const entries = Object.entries(value)
+    if (entries.length > 0) {
+      for (const [key, child] of entries) collectAddedOrRemovedLeaves(child, childPath(path, key, false), variant, changes)
+      return
+    }
+  }
+
+  if (Array.isArray(value)) {
+    if (value.length > 0) {
+      for (let index = 0; index < value.length; index++) collectAddedOrRemovedLeaves(value[index], childPath(path, index, true), variant, changes)
+      return
+    }
+  }
+
+  changes.push(variant === 'old' ? { path, oldValue: value } : { path, newValue: value })
+}
+
 function collectChanges(oldValue: JsonValue | undefined, newValue: JsonValue | undefined, path: string, changes: JsonChange[]) {
   if (isObject(oldValue) && isObject(newValue)) {
     const keys = new Set([...Object.keys(oldValue), ...Object.keys(newValue)])
@@ -36,6 +55,14 @@ function collectChanges(oldValue: JsonValue | undefined, newValue: JsonValue | u
   }
 
   if (Object.is(oldValue, newValue)) return
+  if (oldValue === undefined && newValue !== undefined && (isObject(newValue) || Array.isArray(newValue))) {
+    collectAddedOrRemovedLeaves(newValue, path, 'new', changes)
+    return
+  }
+  if (newValue === undefined && oldValue !== undefined && (isObject(oldValue) || Array.isArray(oldValue))) {
+    collectAddedOrRemovedLeaves(oldValue, path, 'old', changes)
+    return
+  }
   changes.push({ path: path || '$', oldValue, newValue })
 }
 

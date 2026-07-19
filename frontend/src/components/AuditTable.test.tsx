@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
+import { localDateTimeFormatter, utcDateTimeFormatter } from '../dateTime'
 import type { AuditEvent } from '../types'
 import { AuditTable } from './AuditTable'
 
@@ -54,6 +55,15 @@ describe('AuditTable', () => {
     expect(screen.getByText('135000')).toHaveClass('text-[15px]', 'font-medium', 'text-[#1F2937]')
     expect(screen.getByText('135000')).not.toHaveClass('bg-[#EDF9F0]')
     expect(screen.getByText('Dodano')).toHaveClass('border-[#9FE1CB]', 'bg-[#EDF9F0]', 'text-[#085041]')
+  })
+
+  it('shows UTC field values in Warsaw time and keeps UTC on hover', () => {
+    const timestamp = '2026-07-14T08:42:12Z'
+    render(<AuditTable items={[{ ...item, changes: [{ ...item.changes[0], oldValue: null, newValue: timestamp }] }]} filtered={false} contract={contract} />)
+
+    const date = new Date(timestamp)
+    const localValue = screen.getByText(localDateTimeFormatter('pl').format(date))
+    expect(localValue).toHaveAttribute('title', utcDateTimeFormatter('pl').format(date))
   })
 
   it('preserves the previous value as plain evidence for deleted fields', () => {

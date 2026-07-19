@@ -34,4 +34,26 @@ describe('JsonDiff', () => {
     expect(createJsonDiff('{"value":1}', '{\n  "value": 1\n}')).toBeNull()
     expect(createJsonDiff('not json', '{}')).toBeNull()
   })
+
+  it('expands added nested objects into changed leaf paths', () => {
+    const data = createJsonDiff('{"changes":[]}', JSON.stringify({ changes: [{ changeType: 'TSU03', comment: 'test' }] }))
+
+    expect(data?.changes).toEqual([
+      { path: 'changes[0].changeType', newValue: 'TSU03' },
+      { path: 'changes[0].comment', newValue: 'test' },
+    ])
+  })
+
+  it('uses the regular missing-value convention for added and removed JSON leaves', async () => {
+    const user = userEvent.setup()
+    const data = createJsonDiff('{}', JSON.stringify({ publishedAt: '2026-07-08' }))
+    expect(data).not.toBeNull()
+
+    render(<JsonDiff data={data!} />)
+    await user.click(screen.getByRole('button', { name: 'Pokaż różnice' }))
+
+    expect(screen.getByText('—')).toBeInTheDocument()
+    expect(screen.getByText('→')).toBeInTheDocument()
+    expect(screen.getByText('"2026-07-08"')).toHaveClass('bg-[#EDF9F0]')
+  })
 })

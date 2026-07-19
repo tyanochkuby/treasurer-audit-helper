@@ -2,9 +2,11 @@ import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { createJsonDiff } from '../jsonDiffModel'
+import { utcDateTimeFormatter } from '../dateTime'
 import type { AuditChange, AuditEvent, Contract } from '../types'
 import { CopyIcon } from './Icons'
 import { JsonDiff } from './JsonDiff'
+import { AuditValue } from './AuditValue'
 import { Badge } from './ui/badge'
 import { Card } from './ui/card'
 
@@ -32,7 +34,7 @@ function fieldLabel(fieldName: string | null, fallback: string | null, entityTyp
   return t(`auditFieldLabels.byEntityType.${entityTypeCode}.${fieldName}`, { defaultValue: generic })
 }
 
-function EventHeader({ item, contract, dateFormatter, timeFormatter }: { item: AuditEvent; contract: Pick<Contract, 'displayName' | 'organizationId'>; dateFormatter: Intl.DateTimeFormat; timeFormatter: Intl.DateTimeFormat }) {
+function EventHeader({ item, contract, dateFormatter, timeFormatter, utcFormatter }: { item: AuditEvent; contract: Pick<Contract, 'displayName' | 'organizationId'>; dateFormatter: Intl.DateTimeFormat; timeFormatter: Intl.DateTimeFormat; utcFormatter: Intl.DateTimeFormat }) {
   const { t } = useTranslation()
   const [copyState, setCopyState] = useState<{ result: 'idle' | 'copied' | 'error'; announcement: number }>({ result: 'idle', announcement: 0 })
   const resetCopyState = useRef<number | null>(null)
@@ -66,7 +68,7 @@ function EventHeader({ item, contract, dateFormatter, timeFormatter }: { item: A
 
   return <header className="bg-slate-50/90 px-4 py-3.5">
     <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-2 sm:flex sm:flex-wrap sm:gap-x-6 sm:gap-y-3">
-      <time dateTime={item.occurredAtUtc} className="shrink-0 whitespace-nowrap">
+      <time dateTime={item.occurredAtUtc} title={utcFormatter.format(new Date(item.occurredAtUtc))} className="shrink-0 whitespace-nowrap">
         <span className="text-[15px] font-medium text-[#1F2937]">{dateFormatter.format(new Date(item.occurredAtUtc))}</span>{' '}
         <span className="text-[13px] font-normal text-[#8A93A3]">{timeFormatter.format(new Date(item.occurredAtUtc))}</span>
       </time>
@@ -86,42 +88,6 @@ function EventHeader({ item, contract, dateFormatter, timeFormatter }: { item: A
   </header>
 }
 
-type ValueVariant = 'old' | 'new' | 'plain'
-
-function valueClass(variant: ValueVariant) {
-  if (variant === 'old') return 'rounded-[6px] bg-[#FEF1F1] px-2 py-0.5 text-[13px] font-normal text-[#8A93A3] line-through'
-  if (variant === 'new') return 'rounded-[6px] bg-[#EDF9F0] px-2 py-0.5 text-[15px] font-medium text-[#1F2937]'
-  return 'text-[15px] font-medium text-[#1F2937]'
-}
-
-function formatJson(value: string) {
-  try {
-    const parsed: unknown = JSON.parse(value)
-    return parsed !== null && typeof parsed === 'object' ? JSON.stringify(parsed, null, 2) : null
-  } catch {
-    return null
-  }
-}
-
-function ValueCell({ value, variant }: { value: string | null; variant: ValueVariant }) {
-  const { t } = useTranslation()
-  const [expanded, setExpanded] = useState(false)
-  if (value === null || value === '') return <span className="text-[15px] text-[#B0B7C3]">—</span>
-
-  const json = formatJson(value)
-  const text = json ?? value
-  const valueClasses = json
-    ? 'block font-mono text-[13px] font-normal leading-6 text-[#1F2937]'
-    : `inline ${valueClass(variant)}`
-  const isLong = text.length > 90 || text.includes('\n')
-
-  if (!isLong) return <span className={`max-w-full break-words [overflow-wrap:anywhere] ${valueClasses}`}>{text}</span>
-  return <div className="max-w-full">
-    <span className={`max-w-full whitespace-pre-wrap break-words [overflow-wrap:anywhere] ${valueClasses}`}>{expanded ? text : `${text.slice(0, 72)}…`}</span>{' '}
-    <button type="button" aria-expanded={expanded} onClick={() => setExpanded((current) => !current)} className="text-xs font-bold text-brand-blue hover:underline">{expanded ? t('table.hideAll') : t('table.showAll')}</button>
-  </div>
-}
-
 function ChangeRow({ item, change }: { item: AuditEvent; change: AuditChange }) {
   const { t } = useTranslation()
   const displayName = fieldLabel(change.fieldName, change.fieldDisplayName, item.entityTypeCode, t)
@@ -136,13 +102,13 @@ function ChangeRow({ item, change }: { item: AuditEvent; change: AuditChange }) 
       {change.fieldName && change.fieldName !== displayName && <code className="mt-1 block break-all text-[11px] text-slate-400">{change.fieldName}</code>}
     </div>
     {jsonDiff ? <div className="min-w-0 px-6 py-4 leading-6"><JsonDiff data={jsonDiff} /></div> : item.operationType === 'Added' ? <div className="min-w-0 px-6 py-4 leading-6">
-      <span className="sr-only">{t('table.newValue')}: </span><ValueCell value={change.newValue} variant="plain" />
+      <span className="sr-only">{t('table.newValue')}: </span><AuditValue value={change.newValue} variant="plain" />
     </div> : item.operationType === 'Deleted' ? <div className="min-w-0 px-6 py-4 leading-6">
-      <span className="sr-only">{t('table.previousValue')}: </span><ValueCell value={change.oldValue} variant="plain" />
+      <span className="sr-only">{t('table.previousValue')}: </span><AuditValue value={change.oldValue} variant="plain" />
     </div> : <div className="flex min-w-0 flex-wrap items-center gap-3 px-6 py-4 leading-6">
-      <div className="max-w-full"><span className="sr-only">{t('table.previousValue')}: </span><ValueCell value={change.oldValue} variant="old" /></div>
+      <div className="max-w-full"><span className="sr-only">{t('table.previousValue')}: </span><AuditValue value={change.oldValue} variant="old" /></div>
       <span className="shrink-0 text-[15px] text-[#B0B7C3]" aria-hidden="true">→</span>
-      <div className="max-w-full"><span className="sr-only">{t('table.newValue')}: </span><ValueCell value={change.newValue} variant="new" /></div>
+      <div className="max-w-full"><span className="sr-only">{t('table.newValue')}: </span><AuditValue value={change.newValue} variant="new" /></div>
     </div>}
   </div>
 }
@@ -151,6 +117,7 @@ export const AuditTable = memo(function AuditTable({ items, filtered, contract }
   const { t, i18n } = useTranslation()
   const dateFormatter = useMemo(() => new Intl.DateTimeFormat(i18n.resolvedLanguage ?? i18n.language, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Warsaw' }), [i18n.language, i18n.resolvedLanguage])
   const timeFormatter = useMemo(() => new Intl.DateTimeFormat(i18n.resolvedLanguage ?? i18n.language, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'Europe/Warsaw' }), [i18n.language, i18n.resolvedLanguage])
+  const utcFormatter = useMemo(() => utcDateTimeFormatter(i18n.resolvedLanguage ?? i18n.language), [i18n.language, i18n.resolvedLanguage])
   if (items.length === 0) return <Card className="gap-0 border border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
     <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-slate-100 text-2xl">⌁</div>
     <h3 className="mt-4 text-lg font-bold text-brand-navy">{filtered ? t('table.noFilteredResults') : t('table.noHistory')}</h3>
@@ -160,7 +127,7 @@ export const AuditTable = memo(function AuditTable({ items, filtered, contract }
   return <ul aria-label={t('table.caption')} className="m-0 list-none space-y-3 p-0">
     {items.map((item) => <li key={item.id}>
       <article className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <EventHeader item={item} contract={contract} dateFormatter={dateFormatter} timeFormatter={timeFormatter} />
+        <EventHeader item={item} contract={contract} dateFormatter={dateFormatter} timeFormatter={timeFormatter} utcFormatter={utcFormatter} />
 
         {item.changes.length > 0 ? <div className="divide-y divide-[#E5E9F0] border-t border-[#E5E9F0]">
           {item.changes.map((change, index) => <ChangeRow key={`${item.id}-${change.fieldName ?? index}`} item={item} change={change} />)}
