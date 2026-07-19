@@ -7,9 +7,14 @@ interface ExpansionState {
   expanded: Record<string, boolean>
 }
 
-function defaultExpansion(items: AuditEvent[]) {
+function newestIndex(items: AuditEvent[], newestFirst: boolean) {
+  return newestFirst ? 0 : items.length - 1
+}
+
+function defaultExpansion(items: AuditEvent[], newestFirst: boolean) {
   const expandAll = items.length <= 4
-  return Object.fromEntries(items.map((item, index) => [item.id, expandAll || index === 0]))
+  const mostRecent = newestIndex(items, newestFirst)
+  return Object.fromEntries(items.map((item, index) => [item.id, item.changes.length > 0 && (expandAll || index === mostRecent)]))
 }
 
 function sameExpansion(current: ExpansionState, eventIds: string[], expanded: Record<string, boolean>) {
@@ -17,7 +22,7 @@ function sameExpansion(current: ExpansionState, eventIds: string[], expanded: Re
     && current.eventIds.every((eventId, index) => eventId === eventIds[index] && current.expanded[eventId] === expanded[eventId])
 }
 
-export function useAuditEventExpansion(documentId: string, items: AuditEvent[], filtered: boolean, filterKey: string) {
+export function useAuditEventExpansion(documentId: string, items: AuditEvent[], filtered: boolean, filterKey: string, newestFirst = true) {
   const [state, setState] = useState<ExpansionState | null>(null)
   const [filteredOverrides, setFilteredOverrides] = useState<Record<string, boolean>>({})
   const previousFilterKey = useRef(filterKey)
@@ -33,38 +38,40 @@ export function useAuditEventExpansion(documentId: string, items: AuditEvent[], 
 
     setState((current) => {
       if (!current || current.documentId !== documentId) {
-        return { documentId, eventIds: items.map((item) => item.id), expanded: defaultExpansion(items) }
+        return { documentId, eventIds: items.map((item) => item.id), expanded: defaultExpansion(items, newestFirst) }
       }
 
       if (items.length < current.eventIds.length) {
         console.warn('Audit history returned fewer events; resetting event expansion state.')
-        return { documentId, eventIds: items.map((item) => item.id), expanded: defaultExpansion(items) }
+        return { documentId, eventIds: items.map((item) => item.id), expanded: defaultExpansion(items, newestFirst) }
       }
 
       const eventIds = items.map((item) => item.id)
       const nextExpanded: Record<string, boolean> = {}
+      const mostRecent = newestIndex(items, newestFirst)
       items.forEach((item, index) => {
-        nextExpanded[item.id] = current.expanded[item.id] ?? index === 0
+        nextExpanded[item.id] = item.changes.length > 0 && (current.expanded[item.id] ?? index === mostRecent)
       })
       return sameExpansion(current, eventIds, nextExpanded) ? current : { documentId, eventIds, expanded: nextExpanded }
     })
-  }, [documentId, filtered, items])
+  }, [documentId, filtered, items, newestFirst])
 
   const expandedIds = useMemo(() => {
     const ids = new Set<string>()
     const stateMatchesDocument = state?.documentId === documentId
     const expandAllByDefault = items.length <= 4
+    const mostRecent = newestIndex(items, newestFirst)
 
     for (const [index, item] of items.entries()) {
-      const expanded = filtered
+      const expanded = item.changes.length > 0 && (filtered
         ? (filteredOverrides[item.id] ?? true)
         : stateMatchesDocument
-          ? (state.expanded[item.id] ?? (expandAllByDefault || index === 0))
-          : (expandAllByDefault || index === 0)
+          ? (state.expanded[item.id] ?? (expandAllByDefault || index === mostRecent))
+          : (expandAllByDefault || index === mostRecent))
       if (expanded) ids.add(item.id)
     }
     return ids
-  }, [documentId, filtered, filteredOverrides, items, state])
+  }, [documentId, filtered, filteredOverrides, items, newestFirst, state])
 
   const setEventExpanded = useCallback((eventId: string, expanded: boolean) => {
     if (filtered) {
@@ -74,13 +81,13 @@ export function useAuditEventExpansion(documentId: string, items: AuditEvent[], 
     setState((current) => {
       const base = current?.documentId === documentId
         ? current
-        : { documentId, eventIds: items.map((item) => item.id), expanded: defaultExpansion(items) }
+        : { documentId, eventIds: items.map((item) => item.id), expanded: defaultExpansion(items, newestFirst) }
       return { ...base, expanded: { ...base.expanded, [eventId]: expanded } }
     })
-  }, [documentId, filtered, items])
+  }, [documentId, filtered, items, newestFirst])
 
   const setAllExpanded = useCallback((expanded: boolean) => {
-    const values = Object.fromEntries(items.map((item) => [item.id, expanded]))
+    const values = Object.fromEntries(items.map((item) => [item.id, item.changes.length > 0 && expanded]))
     if (filtered) {
       setFilteredOverrides(values)
       return
@@ -90,7 +97,8 @@ export function useAuditEventExpansion(documentId: string, items: AuditEvent[], 
 
   return {
     expandedIds,
-    allExpanded: items.length > 0 && items.every((item) => expandedIds.has(item.id)),
+    allExpanded: items.some((item) => item.changes.length > 0) && items.every((item) => item.changes.length === 0 || expandedIds.has(item.id)),
+    expandableCount: items.filter((item) => item.changes.length > 0).length,
     setEventExpanded,
     setAllExpanded,
   }

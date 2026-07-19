@@ -128,7 +128,7 @@ export function MainScreen({ contracts, onUnauthorized, onLogout }: Props) {
   }, [history.data, filters.entityType])
   const historyItems = history.data?.items ?? EMPTY_AUDIT_EVENTS
   const filtered = hasFilters(filters)
-  const expansion = useAuditEventExpansion(history.data ? selectedId : '', historyItems, filtered, filtered ? params.toString() : '')
+  const expansion = useAuditEventExpansion(history.data ? selectedId : '', historyItems, filtered, filtered ? params.toString() : '', filters.sort === 'desc')
 
   return <div className="h-dvh overflow-hidden bg-canvas">
     <div className="flex h-full min-h-0">
@@ -144,7 +144,7 @@ export function MainScreen({ contracts, onUnauthorized, onLogout }: Props) {
             <div className="col-start-2 row-start-1 flex shrink-0 gap-1.5 sm:gap-2">
               <Button variant="outline" onClick={openSidebar} title={t('main.changeContract')} aria-label={t('main.changeContract')} className="h-10 w-10 border-slate-300 bg-white p-0 text-slate-700 shadow-sm hover:bg-slate-50 lg:hidden"><MenuIcon className="h-5 w-5" /></Button>
               <Button variant="outline" onClick={refresh} disabled={history.isFetching} title={t('main.refresh')} aria-label={t('main.refresh')} className="h-10 w-10 gap-2 border-slate-300 bg-white p-0 font-bold text-slate-700 shadow-sm hover:bg-slate-50 sm:w-auto sm:px-3"><RefreshIcon className={`h-5 w-5 ${history.isFetching ? 'animate-spin' : ''}`} /><span className="hidden sm:inline">{t('main.refresh')}</span></Button>
-              {historyItems.length > 1 && <Button variant="outline" onClick={() => expansion.setAllExpanded(!expansion.allExpanded)} className="h-10 border-slate-300 bg-white px-3 font-bold text-slate-700 shadow-sm hover:bg-slate-50">{expansion.allExpanded ? t('main.collapseAllEvents') : t('main.expandAllEvents')}</Button>}
+              {expansion.expandableCount > 1 && <Button variant="outline" onClick={() => expansion.setAllExpanded(!expansion.allExpanded)} className="h-10 border-slate-300 bg-white px-3 font-bold text-slate-700 shadow-sm hover:bg-slate-50">{expansion.allExpanded ? t('main.collapseAllEvents') : t('main.expandAllEvents')}</Button>}
               <Button onClick={exportCsv} disabled={exporting || history.isPending} title={exporting ? t('main.exporting') : t('main.exportCsv')} aria-label={exporting ? t('main.exporting') : t('main.exportCsv')} className="h-10 w-10 gap-2 bg-brand-amber p-0 font-bold text-brand-navy shadow-sm hover:bg-brand-amber/90 sm:w-auto sm:px-4"><DownloadIcon className="h-5 w-5" /><span className="hidden sm:inline">{exporting ? t('main.exporting') : t('main.exportCsv')}</span></Button>
             </div>
           </div>

@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { createJsonDiff } from '../jsonDiffModel'
@@ -34,10 +34,49 @@ function fieldLabel(fieldName: string | null, fallback: string | null, entityTyp
   return t(`auditFieldLabels.byEntityType.${entityTypeCode}.${fieldName}`, { defaultValue: generic })
 }
 
-function changedFieldsSummary(item: AuditEvent, t: TFunction) {
-  const labels = item.changes.map((change) => fieldLabel(change.fieldName, change.fieldDisplayName, item.entityTypeCode, t))
-  const visible = labels.slice(0, 2).join(', ')
-  return labels.length > 2 ? `${visible} +${labels.length - 2}` : visible
+function summaryText(labels: string[], visibleCount: number) {
+  const visible = labels.slice(0, visibleCount).join(', ')
+  const remaining = labels.length - visibleCount
+  return `${visible}${visible && remaining > 0 ? ' ' : ''}${remaining > 0 ? `+${remaining}` : ''}`
+}
+
+function ChangedFieldsSummary({ labels }: { labels: string[] }) {
+  const containerRef = useRef<HTMLSpanElement>(null)
+  const candidateRefs = useRef<(HTMLSpanElement | null)[]>([])
+  const [visibleCount, setVisibleCount] = useState(() => Math.min(labels.length, 2))
+  const labelsKey = labels.join('\u0000')
+
+  useLayoutEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    function fitSummary() {
+      const available = container?.clientWidth ?? 0
+      if (available === 0) return
+      let fittingCount = 0
+      for (let count = labels.length; count >= 0; count -= 1) {
+        const width = candidateRefs.current[count]?.getBoundingClientRect().width ?? Number.POSITIVE_INFINITY
+        if (width <= available) {
+          fittingCount = count
+          break
+        }
+      }
+      setVisibleCount((current) => current === fittingCount ? current : fittingCount)
+    }
+
+    fitSummary()
+    if (typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(fitSummary)
+    observer.observe(container)
+    return () => observer.disconnect()
+  }, [labels.length, labelsKey])
+
+  return <span ref={containerRef} className="relative hidden min-w-0 flex-1 whitespace-nowrap text-[13px] font-normal text-[#8A93A3] xl:block">
+    <span data-testid="changed-fields-summary">{summaryText(labels, visibleCount)}</span>
+    <span aria-hidden="true" className="invisible absolute inset-0 pointer-events-none">
+      {Array.from({ length: labels.length + 1 }, (_, count) => <span key={count} ref={(node) => { candidateRefs.current[count] = node }} className="absolute left-0 top-0 whitespace-nowrap">{summaryText(labels, count)}</span>)}
+    </span>
+  </span>
 }
 
 function EventHeader({ item, contract, dateFormatter, timeFormatter, utcFormatter, expanded, onToggle, bodyId }: { item: AuditEvent; contract: Pick<Contract, 'displayName' | 'organizationId'>; dateFormatter: Intl.DateTimeFormat; timeFormatter: Intl.DateTimeFormat; utcFormatter: Intl.DateTimeFormat; expanded: boolean; onToggle: () => void; bodyId: string }) {
@@ -73,6 +112,7 @@ function EventHeader({ item, contract, dateFormatter, timeFormatter, utcFormatte
   const copyLabel = copyState.result === 'copied' ? t('table.technicalDataCopied') : t('table.copyTechnicalData')
 
   const expandable = item.changes.length > 0
+  const fieldLabels = item.changes.map((change) => fieldLabel(change.fieldName, change.fieldDisplayName, item.entityTypeCode, t))
 
   return <header className="flex items-stretch bg-slate-50/90 transition-colors hover:bg-slate-100/90">
     <button type="button" disabled={!expandable} aria-expanded={expandable ? expanded : undefined} aria-controls={expandable ? bodyId : undefined} onClick={onToggle} className="grid min-w-0 flex-1 grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-2 px-4 py-3 text-left focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-blue disabled:cursor-default sm:flex sm:gap-x-4">
@@ -87,7 +127,7 @@ function EventHeader({ item, contract, dateFormatter, timeFormatter, utcFormatte
         <span className="hidden text-slate-400 sm:inline" aria-hidden="true">·</span>
         <span className="hidden text-sm text-[#8A93A3] sm:inline">{t('table.fieldCount', { count: item.changes.length })}</span>
       </div>
-      {item.changes.length > 0 && <span className="hidden min-w-0 flex-1 overflow-hidden whitespace-nowrap text-[13px] font-normal text-[#8A93A3] xl:block">{changedFieldsSummary(item, t)}</span>}
+      {expandable && !expanded && <ChangedFieldsSummary labels={fieldLabels} />}
       <div className="ml-auto flex min-w-0 items-center justify-end gap-2 overflow-hidden">
         <span title={item.actorId} className="hidden min-w-0 truncate text-[13px] font-normal text-[#8A93A3] md:inline">{item.actorDisplayName}</span>
         <span className="shrink-0 font-mono text-xs font-normal text-[#8A93A3]">#{item.id}</span>

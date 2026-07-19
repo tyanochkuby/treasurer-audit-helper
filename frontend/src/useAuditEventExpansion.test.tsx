@@ -71,4 +71,22 @@ describe('useAuditEventExpansion', () => {
     rerender({ filtered: false, filterKey: '' })
     expect([...result.current.expandedIds]).toEqual(['1', '2'])
   })
+
+  it('expands the newest event when the history is sorted oldest-first', () => {
+    const items = events(5)
+    const { result } = renderHook(() => useAuditEventExpansion('a', items, false, '', false))
+
+    expect([...result.current.expandedIds]).toEqual(['5'])
+  })
+
+  it('excludes zero-change events from global expansion controls', () => {
+    const items = events(5)
+    items[1] = { ...items[1], changes: [] }
+    const { result } = renderHook(() => useAuditEventExpansion('a', items, false, ''))
+
+    expect(result.current.expandableCount).toBe(4)
+    act(() => result.current.setAllExpanded(true))
+    expect(result.current.allExpanded).toBe(true)
+    expect(result.current.expandedIds.has('2')).toBe(false)
+  })
 })

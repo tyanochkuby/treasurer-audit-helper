@@ -128,6 +128,5 @@ export const pl = {
     copyTechnicalData: 'Kopiuj dane techniczne',
     technicalDataCopied: 'Skopiowano dane techniczne',
     technicalDataCopyFailed: 'Nie udało się skopiować danych technicznych',
-    noRecordedDifference: 'Brak różnic w zapisanych wartościach',
   },
 } as const
