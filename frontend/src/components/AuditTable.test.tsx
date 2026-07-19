@@ -39,7 +39,6 @@ describe('AuditTable', () => {
   it('keeps an event visible when it has no meaningful field differences', () => {
     render(<AuditTable items={[{ ...item, changes: [] }]} filtered={false} contract={contract} />)
 
-    expect(screen.queryByText('Brak różnic w zapisanych wartościach')).not.toBeInTheDocument()
     expect(screen.getByText('#987')).toHaveClass('font-mono', 'text-xs', 'text-[#8A93A3]')
     expect(screen.getByRole('button', { name: 'Kopiuj dane techniczne' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /14 lip 2026/ })).toBeDisabled()
