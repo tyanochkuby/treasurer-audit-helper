@@ -106,7 +106,7 @@ The event itself is never discarded just because no meaningful field differences
 CSV exports exactly the selected contract respecting UI filters and sort order, with one row per changed field, or one metadata-only row when an event has no meaningful field differences. Files use:
 
 - UTF-8 with BOM,
-- semicolon delimiter, declared to Excel with a leading `sep=;` line so the file opens correctly regardless of the machine's regional list separator,
+- semicolon delimiter,
 - RFC-style quoting for delimiters, quotes, and newlines,
 - ISO UTC timestamps,
 - Polish display labels plus a separate technical field-name column,
@@ -135,7 +135,7 @@ Source payloads are state snapshots, not minimal diffs: 13,386 of 40,439 field r
 
 **3. CSV export built for hand-off.**
 
-The export opens correctly in Excel without the import wizard regardless of the machine's regional settings, carries a header with the contract name, organization, and active filters, Polish labels next to technical field names, and formula-injection protection (`=1+1` → `'=1+1`); format details in [CSV contract](#csv-contract).
+The export uses UTF-8 with BOM so Excel preserves Polish characters, carries a header with the contract name, organization, and active filters, Polish labels next to technical field names, and formula-injection protection (`=1+1` → `'=1+1`); format details in [CSV contract](#csv-contract).
 *Value:* it lets the treasurer share the history with an auditor or accountant. The recipient sees exactly which slice of the history the report covers.
 
 ### Consciously left out
