@@ -45,6 +45,8 @@ export const pl = {
     auditHistory: 'Historia audytowa',
     changeContract: 'Zmień umowę',
     refresh: 'Odśwież',
+    expandAllEvents: 'Rozwiń wszystkie',
+    collapseAllEvents: 'Zwiń wszystkie',
     exporting: 'Eksportowanie…',
     exportCsv: 'Eksportuj CSV',
     newDataTitle: 'Dostępne są nowe dane dla tej umowy.',

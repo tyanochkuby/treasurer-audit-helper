@@ -41,6 +41,26 @@
   button, input, select { font: inherit; }
 }
 
+.audit-event-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  visibility: hidden;
+  transition: grid-template-rows 180ms ease-out, visibility 0s linear 180ms;
+}
+
+.audit-event-body-expanded {
+  grid-template-rows: 1fr;
+  visibility: visible;
+  transition: grid-template-rows 180ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .audit-event-body,
+  .audit-event-body-expanded {
+    transition: none;
+  }
+}
+
 @theme inline {
   --font-heading: var(--font-sans);
   --font-sans: 'Inter Variable', sans-serif;

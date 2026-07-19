@@ -1,8 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
-import type { Contract } from '../types'
+import type { AuditEvent, Contract } from '../types'
 import { MainScreen } from './MainScreen'
 
 const contract: Contract = {
@@ -35,5 +36,40 @@ describe('MainScreen', () => {
     expect(screen.getByRole('button', { name: 'Wyloguj' })).toBeInTheDocument()
     const loading = screen.getByRole('status', { name: 'Ładowanie historii' })
     expect(loading.children).toHaveLength(3)
+  })
+
+  it('offers one reactive expand/collapse-all control for multi-event histories', async () => {
+    const user = userEvent.setup()
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    const filters = { operationType: '', entityType: '', from: '', to: '', search: '', sort: 'desc' }
+    const items: AuditEvent[] = Array.from({ length: 5 }, (_, index) => ({
+      id: String(index + 1),
+      contractId: contract.id,
+      occurredAtUtc: '2026-07-14T08:42:12Z',
+      actorDisplayName: 'anna@example.pl',
+      actorId: 'actor-id',
+      operationType: 'Modified',
+      entityTypeCode: 1,
+      entityType: 'ContractHeaderEntity',
+      entityId: null,
+      description: null,
+      changes: [{ fieldName: 'Number', fieldDisplayName: 'Numer', oldValue: '1', newValue: '2' }],
+    }))
+    queryClient.setQueryData(['audit', contract.id, filters], { contractId: contract.id, generatedAtUtc: '2026-07-14T10:00:00Z', version: 1, items })
+    vi.stubGlobal('fetch', vi.fn(() => new Promise(() => undefined)))
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={[`/?contractId=${contract.id}`]}>
+          <MainScreen contracts={[contract]} onUnauthorized={vi.fn()} onLogout={vi.fn()} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+
+    const headers = screen.getAllByRole('button', { expanded: false })
+    expect(headers).toHaveLength(4)
+    await user.click(screen.getByRole('button', { name: 'Rozwiń wszystkie' }))
+    expect(screen.getByRole('button', { name: 'Zwiń wszystkie' })).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { expanded: true })).toHaveLength(5)
   })
 })

@@ -4,7 +4,7 @@ import type { TFunction } from 'i18next'
 import { createJsonDiff } from '../jsonDiffModel'
 import { utcDateTimeFormatter } from '../dateTime'
 import type { AuditChange, AuditEvent, Contract } from '../types'
-import { CopyIcon } from './Icons'
+import { ChevronIcon, CopyIcon } from './Icons'
 import { JsonDiff } from './JsonDiff'
 import { AuditValue } from './AuditValue'
 import { Badge } from './ui/badge'
@@ -34,7 +34,13 @@ function fieldLabel(fieldName: string | null, fallback: string | null, entityTyp
   return t(`auditFieldLabels.byEntityType.${entityTypeCode}.${fieldName}`, { defaultValue: generic })
 }
 
-function EventHeader({ item, contract, dateFormatter, timeFormatter, utcFormatter }: { item: AuditEvent; contract: Pick<Contract, 'displayName' | 'organizationId'>; dateFormatter: Intl.DateTimeFormat; timeFormatter: Intl.DateTimeFormat; utcFormatter: Intl.DateTimeFormat }) {
+function changedFieldsSummary(item: AuditEvent, t: TFunction) {
+  const labels = item.changes.map((change) => fieldLabel(change.fieldName, change.fieldDisplayName, item.entityTypeCode, t))
+  const visible = labels.slice(0, 2).join(', ')
+  return labels.length > 2 ? `${visible} +${labels.length - 2}` : visible
+}
+
+function EventHeader({ item, contract, dateFormatter, timeFormatter, utcFormatter, expanded, onToggle, bodyId }: { item: AuditEvent; contract: Pick<Contract, 'displayName' | 'organizationId'>; dateFormatter: Intl.DateTimeFormat; timeFormatter: Intl.DateTimeFormat; utcFormatter: Intl.DateTimeFormat; expanded: boolean; onToggle: () => void; bodyId: string }) {
   const { t } = useTranslation()
   const [copyState, setCopyState] = useState<{ result: 'idle' | 'copied' | 'error'; announcement: number }>({ result: 'idle', announcement: 0 })
   const resetCopyState = useRef<number | null>(null)
@@ -66,8 +72,11 @@ function EventHeader({ item, contract, dateFormatter, timeFormatter, utcFormatte
 
   const copyLabel = copyState.result === 'copied' ? t('table.technicalDataCopied') : t('table.copyTechnicalData')
 
-  return <header className="bg-slate-50/90 px-4 py-3.5">
-    <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-2 sm:flex sm:flex-wrap sm:gap-x-6 sm:gap-y-3">
+  const expandable = item.changes.length > 0
+
+  return <header className="flex items-stretch bg-slate-50/90 transition-colors hover:bg-slate-100/90">
+    <button type="button" disabled={!expandable} aria-expanded={expandable ? expanded : undefined} aria-controls={expandable ? bodyId : undefined} onClick={onToggle} className="grid min-w-0 flex-1 grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-2 px-4 py-3 text-left focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-blue disabled:cursor-default sm:flex sm:gap-x-4">
+      {expandable && <ChevronIcon className={`h-4 w-4 shrink-0 text-[#8A93A3] transition-transform duration-150 motion-reduce:transition-none ${expanded ? 'rotate-90' : ''}`} />}
       <time dateTime={item.occurredAtUtc} title={utcFormatter.format(new Date(item.occurredAtUtc))} className="shrink-0 whitespace-nowrap">
         <span className="text-[15px] font-medium text-[#1F2937]">{dateFormatter.format(new Date(item.occurredAtUtc))}</span>{' '}
         <span className="text-[13px] font-normal text-[#8A93A3]">{timeFormatter.format(new Date(item.occurredAtUtc))}</span>
@@ -78,13 +87,14 @@ function EventHeader({ item, contract, dateFormatter, timeFormatter, utcFormatte
         <span className="hidden text-slate-400 sm:inline" aria-hidden="true">·</span>
         <span className="hidden text-sm text-[#8A93A3] sm:inline">{t('table.fieldCount', { count: item.changes.length })}</span>
       </div>
-      <div className="ml-auto flex w-full min-w-0 items-center justify-end gap-2 overflow-hidden sm:w-auto">
-        <span title={item.actorId} className="min-w-0 truncate text-[13px] font-normal text-[#8A93A3]">{item.actorDisplayName}</span>
+      {item.changes.length > 0 && <span className="hidden min-w-0 flex-1 overflow-hidden whitespace-nowrap text-[13px] font-normal text-[#8A93A3] xl:block">{changedFieldsSummary(item, t)}</span>}
+      <div className="ml-auto flex min-w-0 items-center justify-end gap-2 overflow-hidden">
+        <span title={item.actorId} className="hidden min-w-0 truncate text-[13px] font-normal text-[#8A93A3] md:inline">{item.actorDisplayName}</span>
         <span className="shrink-0 font-mono text-xs font-normal text-[#8A93A3]">#{item.id}</span>
-        <button type="button" onClick={copyTechnicalData} title={copyLabel} aria-label={copyLabel} className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-[#B0B7C3] transition hover:bg-slate-100 hover:text-slate-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"><CopyIcon className="h-4 w-4" /></button>
-        <span role="status" className="sr-only">{copyState.result !== 'idle' && <span key={copyState.announcement}>{copyState.result === 'copied' ? t('table.technicalDataCopied') : t('table.technicalDataCopyFailed')}</span>}</span>
       </div>
-    </div>
+    </button>
+    <button type="button" onClick={copyTechnicalData} title={copyLabel} aria-label={copyLabel} className="my-auto mr-2 grid h-8 w-8 shrink-0 place-items-center rounded-md text-[#B0B7C3] transition hover:bg-slate-200 hover:text-slate-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"><CopyIcon className="h-4 w-4" /></button>
+    <span role="status" className="sr-only">{copyState.result !== 'idle' && <span key={copyState.announcement}>{copyState.result === 'copied' ? t('table.technicalDataCopied') : t('table.technicalDataCopyFailed')}</span>}</span>
   </header>
 }
 
@@ -113,7 +123,7 @@ function ChangeRow({ item, change }: { item: AuditEvent; change: AuditChange }) 
   </div>
 }
 
-export const AuditTable = memo(function AuditTable({ items, filtered, contract }: { items: AuditEvent[]; filtered: boolean; contract: Pick<Contract, 'displayName' | 'organizationId'> }) {
+export const AuditTable = memo(function AuditTable({ items, filtered, contract, expandedIds = new Set(items.map((item) => item.id)), onToggle = () => undefined }: { items: AuditEvent[]; filtered: boolean; contract: Pick<Contract, 'displayName' | 'organizationId'>; expandedIds?: ReadonlySet<string>; onToggle?: (eventId: string, expanded: boolean) => void }) {
   const { t, i18n } = useTranslation()
   const dateFormatter = useMemo(() => new Intl.DateTimeFormat(i18n.resolvedLanguage ?? i18n.language, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Warsaw' }), [i18n.language, i18n.resolvedLanguage])
   const timeFormatter = useMemo(() => new Intl.DateTimeFormat(i18n.resolvedLanguage ?? i18n.language, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'Europe/Warsaw' }), [i18n.language, i18n.resolvedLanguage])
@@ -125,14 +135,21 @@ export const AuditTable = memo(function AuditTable({ items, filtered, contract }
   </Card>
 
   return <ul aria-label={t('table.caption')} className="m-0 list-none space-y-3 p-0">
-    {items.map((item) => <li key={item.id}>
+    {items.map((item) => {
+      const expanded = expandedIds.has(item.id)
+      const bodyId = `audit-event-${item.id}-body`
+      return <li key={item.id}>
       <article className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <EventHeader item={item} contract={contract} dateFormatter={dateFormatter} timeFormatter={timeFormatter} utcFormatter={utcFormatter} />
+        <EventHeader item={item} contract={contract} dateFormatter={dateFormatter} timeFormatter={timeFormatter} utcFormatter={utcFormatter} expanded={expanded} onToggle={() => onToggle(item.id, !expanded)} bodyId={bodyId} />
 
-        {item.changes.length > 0 ? <div className="divide-y divide-[#E5E9F0] border-t border-[#E5E9F0]">
-          {item.changes.map((change, index) => <ChangeRow key={`${item.id}-${change.fieldName ?? index}`} item={item} change={change} />)}
-        </div> : <p className="border-t border-slate-200 px-4 py-4 text-sm italic text-slate-500">{t('table.noRecordedDifference')}</p>}
+        {item.changes.length > 0 && <div id={bodyId} aria-hidden={!expanded} className={`audit-event-body ${expanded ? 'audit-event-body-expanded' : ''}`}>
+          <div className="min-h-0 overflow-hidden">
+            <div className="divide-y divide-[#E5E9F0] border-t border-[#E5E9F0]">
+              {item.changes.map((change, index) => <ChangeRow key={`${item.id}-${change.fieldName ?? index}`} item={item} change={change} />)}
+            </div>
+          </div>
+        </div>}
       </article>
-    </li>)}
+    </li>})}
   </ul>
 })

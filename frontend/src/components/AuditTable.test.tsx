@@ -22,8 +22,8 @@ describe('AuditTable', () => {
     expect(screen.getByText('→')).toHaveClass('text-[#B0B7C3]')
     expect(screen.getByText('Poprzednia wartość:')).toHaveClass('sr-only')
     expect(screen.getByText('Nowa wartość:')).toHaveClass('sr-only')
-    expect(screen.getByText('Wartość brutto umowy')).toBeInTheDocument()
-    expect(screen.getByText('Wartość brutto umowy').parentElement).toHaveClass('bg-slate-50/80', 'md:bg-white')
+    expect(screen.getAllByText('Wartość brutto umowy')).toHaveLength(2)
+    expect(screen.getAllByText('Wartość brutto umowy')[1].parentElement).toHaveClass('bg-slate-50/80', 'md:bg-white')
     expect(screen.getByText('1 pole')).toBeInTheDocument()
     expect(screen.getByText('14 lip 2026')).toHaveClass('text-[15px]', 'font-medium')
     expect(screen.getByText('10:42:12')).toHaveClass('text-[13px]', 'font-normal')
@@ -40,9 +40,10 @@ describe('AuditTable', () => {
   it('keeps an event visible when it has no meaningful field differences', () => {
     render(<AuditTable items={[{ ...item, changes: [] }]} filtered={false} contract={contract} />)
 
-    expect(screen.getByText('Brak różnic w zapisanych wartościach')).toBeInTheDocument()
+    expect(screen.queryByText('Brak różnic w zapisanych wartościach')).not.toBeInTheDocument()
     expect(screen.getByText('#987')).toHaveClass('font-mono', 'text-xs', 'text-[#8A93A3]')
     expect(screen.getByRole('button', { name: 'Kopiuj dane techniczne' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /14 lip 2026/ })).toBeDisabled()
   })
 
   it('shows only the new value for added fields', () => {
@@ -116,7 +117,7 @@ describe('AuditTable', () => {
       changes: [{ fieldName: 'futureField', fieldDisplayName: 'Przyszłe pole', oldValue: '1', newValue: '2' }],
     }]} filtered={false} contract={contract} />)
 
-    expect(screen.getByText('Przyszłe pole')).toBeInTheDocument()
+    expect(screen.getAllByText('Przyszłe pole')).toHaveLength(2)
     expect(screen.getByText('futureField')).toBeInTheDocument()
   })
 
@@ -156,5 +157,35 @@ describe('AuditTable', () => {
     } finally {
       vi.useRealTimers()
     }
+  })
+
+  it('exposes the collapsed state and toggles from the header without treating copy as a toggle', async () => {
+    const user = userEvent.setup()
+    const onToggle = vi.fn()
+    render(<AuditTable items={[item]} filtered={false} contract={contract} expandedIds={new Set()} onToggle={onToggle} />)
+
+    const header = screen.getByRole('button', { name: /14 lip 2026/ })
+    expect(header).toHaveAttribute('aria-expanded', 'false')
+    expect(header).toHaveAttribute('aria-controls', 'audit-event-987-body')
+    expect(screen.getAllByText('Wartość brutto umowy')[1].closest('.audit-event-body')).toHaveAttribute('aria-hidden', 'true')
+
+    await user.click(header)
+    expect(onToggle).toHaveBeenCalledWith('987', true)
+
+    await user.click(screen.getByRole('button', { name: 'Kopiuj dane techniczne' }))
+    expect(onToggle).toHaveBeenCalledTimes(1)
+  })
+
+  it('summarizes changed field labels without cutting a field name', () => {
+    render(<AuditTable items={[{
+      ...item,
+      changes: [
+        item.changes[0],
+        { fieldName: 'PublicationDate', fieldDisplayName: 'Data publikacji', oldValue: '1', newValue: '2' },
+        { fieldName: 'SentData', fieldDisplayName: 'Wysłane dane', oldValue: '1', newValue: '2' },
+      ],
+    }]} filtered={false} contract={contract} />)
+
+    expect(screen.getByText('Wartość brutto umowy, Data publikacji +1')).toBeInTheDocument()
   })
 })
